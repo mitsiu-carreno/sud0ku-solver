@@ -10,6 +10,7 @@ namespace grid{
   };
   
   void InitGrid();
+  void PrintGrid(grid::Grid, bool);  
 };
 
 

@@ -1,42 +1,42 @@
 #include "constants.hpp"
 #include "grid.hpp"
 #include <iostream>
+#include <ncurses.h>
 
 namespace grid{
   void InitGrid(){
-    short grid[constants::kGridSize][constants::kGridSize];
-    grid[0][1] = 5;
-    std::cout << "sizeof short = "<< sizeof(short) << " size of bool = " << sizeof(bool) << "\n";
-    std::cout << grid[0][1] << " short gridsize = " << sizeof(grid) << "\n";
 
-    grid::Grid grid2[constants::kGridSize][constants::kGridSize];
-    short temp = 3;
-    grid2[0][1] = {true, &temp};
-    std::cout << *static_cast<short*>(grid2[0][1].value) << " struct gridsize = " << sizeof(grid2) << "\n";
+    grid::Grid grid[constants::kGridSize][constants::kGridSize];
+    //short temp = 3;
+    //grid2[0][1] = {true, &temp};
+    //std::cout << *static_cast<short*>(grid2[0][1].value) << " struct gridsize = " << sizeof(grid2) << "\n";
 
-
-    grid::Grid *grid3[constants::kGridSize][constants::kGridSize];
-    short temp2 = 10;
-    grid::Grid temp3 = {true, &temp2};
-    grid3[0][1] = &temp3;
-    std::cout << *static_cast<short*>(grid3[0][1]->value) << " pointergrid size = " << sizeof(grid3) << " and struct size is = " << sizeof(temp3) <<"\n";
-   
-    std::cout << "int ponter size = " << sizeof(int*) << "\n";
-    std::cout << "short pointer size = " << sizeof(short*) << "\n";
-    std::cout << "bool pointer size = " << sizeof(bool*) << "\n";
-    std::cout << "void pointer size = " << sizeof(void*) << "\n";
-
-    /*
     while(true){
-      std::cout << "Ingresa la posición y el valor (A1 5): ";
-      std::cout << "Para cancelar presiona \"c\": ";
-      std::cout << "Para terminar presona \"q\": ";
-    }
-    */
+      const short kMaxInput = 5;
+      char input[kMaxInput];  // should we clean this var? naaa when overwritten, a new null termiator will be added
 
+      printw("Ingresa la posición y el valor (A1 5) o \"c\" para cancelar o \"q\" para terminar: ");
+      getnstr(input, kMaxInput -1);   // leave space for null terminator
+      
+      for(int i {0}; i < sizeof(input) / sizeof(input[0]); ++i){
+        printw("%c", input[i]);
+        printw("\n");
+      }
+      
+      if(input[0] == 'c' && input[1] == '\0'){
+        //RemoveHintNumber();
+      }else if(input[0] == 'q' && input[1] == '\0'){
+        return;
+      }else{
+        //ValidateNewHint(input);
+        //AddHintNumber();
+      } 
+      //PrintGrid(grid, true);
+    }
   }
+
   /*
-  void PrintGrid(grid::grid, bool show_guides=false){
+  void PrintGrid(grid::Grid, bool show_guides=false){
     for(short x = 0; x < grid::grid.length; ++x){
       for(short y = 0; y < grid::grid[x].length; ++y){
         

@@ -4,10 +4,10 @@ PLAT_NAME := $(shell uname -s)
 #Compiler
 ifeq ($(PLAT_NAME), Darwin)
 	CC=clang++ -arch x86_64
-	LIBS= 
+	LIBS= -lncurses
 else
 	CC=g++
-	LIBS= 
+	LIBS= -lncurses
 endif
 
 # Project structure
