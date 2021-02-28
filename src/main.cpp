@@ -1,7 +1,7 @@
-#include <iostream>
+#include "grid.hpp"
 
 int main(){
 
-  std::cout << "Hello friend!";
+  grid::InitGrid();    
   return 0;
 }
