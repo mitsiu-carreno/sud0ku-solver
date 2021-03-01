@@ -1,5 +1,7 @@
 #include "constants.hpp"
 #include "grid.hpp"
+#include "utils.hpp"
+#include <algorithm>
 #include <iostream>
 #include <ncurses.h>
 
@@ -20,14 +22,18 @@ namespace grid{
       PrintGrid(grid, true);
       printw("\n");
 
-      printw("Ingresa la posición y el valor (A1 5) o \"c\" para cancelar o \"q\" para terminar: ");
+      printw("Enter the coordinate followed by the value (ex \"A1 5\"), \"c\" to cancel or \"q\" to finish: ");
       getnstr(input, kMaxInput -1);   // leave space for null terminator
       
+      /*
       for(int i {0}; i < sizeof(input) / sizeof(input[0]); ++i){
         printw("%c", input[i]);
         printw("\n");
       }
+      */
+      utils::InputToLower(input);
       
+
       if(input[0] == 'c' && input[1] == '\0'){
         //RemoveHintNumber();
       }else if(input[0] == 'q' && input[1] == '\0'){
@@ -39,6 +45,12 @@ namespace grid{
       refresh();
     }
   }
+
+  /* 
+  bool ValidateNewHint(){
+    
+  }
+  */
 
   // Help PrintGrid to determine if a divider should be placed in the current row/column (two dividers by each axis)
   bool PrintDivisionHere(short axis_value){
@@ -92,11 +104,13 @@ namespace grid{
       }
       printw("\n");  
       if(PrintDivisionHere(x)){
+        char divider[constants::kGridSize + constants::kGridSection];
+        std::fill(divider, divider + constants::kGridSize + constants::kGridSection -1, '-');
         if(show_guides){
-          printw("    -----------\n");
-        }else{
-          printw("-----------\n");
+          printw("    ");
         }
+        printw(divider);
+        printw("\n");
       }
     }
   }
