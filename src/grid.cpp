@@ -15,6 +15,8 @@ namespace grid{
       const short kMaxInput = 5;
       char input[kMaxInput];  // should we clean this var? naaa when overwritten, a new null termiator will be added
 
+      PrintGrid(grid, true);
+
       printw("Ingresa la posición y el valor (A1 5) o \"c\" para cancelar o \"q\" para terminar: ");
       getnstr(input, kMaxInput -1);   // leave space for null terminator
       
@@ -31,17 +33,29 @@ namespace grid{
         //ValidateNewHint(input);
         //AddHintNumber();
       } 
-      //PrintGrid(grid, true);
+
     }
   }
 
-  /*
-  void PrintGrid(grid::Grid, bool show_guides=false){
-    for(short x = 0; x < grid::grid.length; ++x){
-      for(short y = 0; y < grid::grid[x].length; ++y){
-        
+  void PrintGrid(grid::Grid grid[constants::kGridSize][constants::kGridSize], bool show_guides=false){
+    for(short x = 0; x < constants::kGridSize; ++x){
+      if(x > 0 && x%3 == 0){
+        printw("------------\n");
       }
+      for(short y = 0; y < constants::kGridSize; ++y){
+        if(y > 0 && y%3 == 0){
+          printw("|");
+        }
+
+        //if(*static_cast<short*>(grid[x][y].value) == nullptr){
+        if(!grid[x][y].value){
+          printw(" ");
+        }else{
+          printw("%d", *static_cast<short*>(grid[x][y].value));
+        }
+      }
+      printw("\n");  
     }
   }
-  */
+
 };
