@@ -65,8 +65,12 @@ namespace grid{
  
   // 
   bool AddHint(grid::NewHint *new_hint, grid::Grid &grid){
-    printw("x=%d", new_hint->x);
-    getch();
+    //printw("x=%d", new_hint->x);
+    //getch();
+    
+    
+    //DANGLING POINTER?!
+    grid[0][0] = {true, };
     return true;
   
     // reference
@@ -98,15 +102,18 @@ namespace grid{
       }else if(input[0] == 'q' && input[1] == '\0'){
         return;
       }else{
+        AddHint(nullptr, grid);
+        /*
         NewHint *new_hint = ValidateNewHint(input);
         if(new_hint){
-          //if(!AddHint(new_hint, grid)){     // UNCOMMENT
+          if(!AddHint(new_hint, grid)){    
             printw("Snap, an error ocurred while adding number, lets try again"); 
             getch();
-          //}                                 // UNCOMMENT
+          }                                 
         }
         delete new_hint;
         new_hint = nullptr;
+        */
       } 
       refresh();
     }
