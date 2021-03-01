@@ -1,11 +1,53 @@
 #include "constants.hpp"
 #include "grid.hpp"
 #include "utils.hpp"
-#include <algorithm>
-#include <iostream>
+#include <algorithm>  // std::fill
+#include <ctype.h>    // toupper
 #include <ncurses.h>
 
 namespace grid{
+  
+  // Check if input is a valid coordinate
+  bool ValidateNewHint(char *input){
+    // check length until null terminator
+    short i{0};
+    while(input[i]){
+      ++i;
+    }
+    if(i < 3 || i > 4){
+      printw("Insufficient data, type the row letter \"A\", the column number \"1\", white space \" \" and the desired value \"5\"");
+      getch();
+      return false;
+    }
+   
+    const short kAsciiLetterStart = 97;
+    const short kAsciiNumberStart = 49; 
+    if(input[0] < kAsciiLetterStart || input[0] > kAsciiLetterStart + constants::kGridSize - 1){
+      printw("invalid row %c, valid from %c-%c", input[0], toupper(kAsciiLetterStart), toupper(kAsciiLetterStart + constants::kGridSize - 1));
+      getch();
+      return false;
+    }
+    if(input[1] < kAsciiNumberStart || input[1] > kAsciiNumberStart + constants::kGridSize - 1){
+      printw("invalid column %c, valid from %c-%c", input[1], kAsciiNumberStart, (kAsciiNumberStart + constants::kGridSize -1));
+      getch();
+      return false;
+    }
+    bool swap_third_position = false;
+    if(input[2] >= kAsciiNumberStart && input[2] <= kAsciiNumberStart + constants::kGridSize - 1){
+      swap_third_position = true;
+    }else if(input[2] != 32){
+      printw("unexpected character %c", input[2]);
+      getch();
+      return false;
+    }
+    if(!swap_third_position && (input[3] < kAsciiNumberStart || input[3] > kAsciiNumberStart + constants::kGridSize - 1)){
+      printw("invalid value %c, expected from %c-%c", input[3], kAsciiNumberStart, (kAsciiNumberStart + constants::kGridSize - 1));
+      getch();
+      return false;
+    }
+    return true;
+  }
+  
   // Creates grid, and ask user for hint numbers
   void InitGrid(){
 
@@ -22,35 +64,22 @@ namespace grid{
       PrintGrid(grid, true);
       printw("\n");
 
-      printw("Enter the coordinate followed by the value (ex \"A1 5\"), \"c\" to cancel or \"q\" to finish: ");
+      printw("Enter the coordinate followed by the value (ex \"A1 5\"), \"c\" to undo or \"q\" to finish: ");
       getnstr(input, kMaxInput -1);   // leave space for null terminator
       
-      /*
-      for(int i {0}; i < sizeof(input) / sizeof(input[0]); ++i){
-        printw("%c", input[i]);
-        printw("\n");
-      }
-      */
       utils::InputToLower(input);
       
-
       if(input[0] == 'c' && input[1] == '\0'){
         //RemoveHintNumber();
       }else if(input[0] == 'q' && input[1] == '\0'){
         return;
       }else{
-        //ValidateNewHint(input);
+        ValidateNewHint(input);
         //AddHintNumber();
       } 
       refresh();
     }
   }
-
-  /* 
-  bool ValidateNewHint(){
-    
-  }
-  */
 
   // Help PrintGrid to determine if a divider should be placed in the current row/column (two dividers by each axis)
   bool PrintDivisionHere(short axis_value){
