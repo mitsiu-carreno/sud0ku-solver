@@ -4,6 +4,7 @@
 #include <ncurses.h>
 
 namespace grid{
+  // Creates grid, and ask user for hint numbers
   void InitGrid(){
 
     grid::Grid grid[constants::kGridSize][constants::kGridSize];
@@ -12,10 +13,12 @@ namespace grid{
     //std::cout << *static_cast<short*>(grid2[0][1].value) << " struct gridsize = " << sizeof(grid2) << "\n";
 
     while(true){
+      clear();
       const short kMaxInput = 5;
       char input[kMaxInput];  // should we clean this var? naaa when overwritten, a new null termiator will be added
 
       PrintGrid(grid, true);
+      printw("\n");
 
       printw("Ingresa la posición y el valor (A1 5) o \"c\" para cancelar o \"q\" para terminar: ");
       getnstr(input, kMaxInput -1);   // leave space for null terminator
@@ -33,29 +36,68 @@ namespace grid{
         //ValidateNewHint(input);
         //AddHintNumber();
       } 
-
+      refresh();
     }
   }
 
-  void PrintGrid(grid::Grid grid[constants::kGridSize][constants::kGridSize], bool show_guides=false){
-    for(short x = 0; x < constants::kGridSize; ++x){
-      if(x > 0 && x%3 == 0){
-        printw("------------\n");
-      }
-      for(short y = 0; y < constants::kGridSize; ++y){
-        if(y > 0 && y%3 == 0){
-          printw("|");
-        }
+  // Help PrintGrid to determine if a divider should be placed in the current row/column (two dividers by each axis)
+  bool PrintDivisionHere(short axis_value){
+    if((axis_value+1) < constants::kGridSize && (axis_value+1) % constants::kGridSection == 0){
+      return true;
+    } else{
+      return false;
+    }
+  }
 
-        //if(*static_cast<short*>(grid[x][y].value) == nullptr){
+  // Display grid in screen, add dividers for boxes and can display guides for square localization
+  void PrintGrid(grid::Grid grid[constants::kGridSize][constants::kGridSize], bool show_guides=false){
+    if(show_guides){
+      // if show_guides set guides for first two rows, first row letter second divider
+      for(short tmp_row {0}; tmp_row < 2; ++tmp_row){
+        printw("    ");
+        for(short col_num {0}; col_num < constants::kGridSize; ++col_num){
+          if(tmp_row == 0){
+            printw("%d", col_num + 1);
+            if(PrintDivisionHere(col_num)){
+              printw(" ");
+            }
+          }else{
+            printw("*");
+            if(PrintDivisionHere(col_num)){
+              printw(" ");
+            }
+          } 
+        }
+        printw("\n");
+      }
+    }
+
+    
+    for(short x {0}, row_letter {65}; x < constants::kGridSize; ++x, ++row_letter){
+      if(show_guides){
+        printw("%c * ", row_letter);
+      }
+
+      for(short y = 0; y < constants::kGridSize; ++y){
+        // if grid[x][y].value is nullptr
         if(!grid[x][y].value){
           printw(" ");
         }else{
           printw("%d", *static_cast<short*>(grid[x][y].value));
         }
+        
+        if(PrintDivisionHere(y)){
+          printw("|");
+        }
       }
       printw("\n");  
+      if(PrintDivisionHere(x)){
+        if(show_guides){
+          printw("    -----------\n");
+        }else{
+          printw("-----------\n");
+        }
+      }
     }
   }
-
 };
