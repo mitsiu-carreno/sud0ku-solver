@@ -5,14 +5,20 @@
 
 namespace grid{
 
-  // Important to initialize value as nullptr, avoid memory leaks
+  // Important to initialize value as nullptr, avoid reading garbage memory
   struct Grid{
     bool short_type;
     void *value = nullptr;
   };
+
+  struct NewHint{
+    short x;
+    short y;
+    short value;
+  };
   
   void InitGrid();
-  void PrintGrid(grid::Grid[constants::kGridSize][constants::kGridSize], bool);  
+  void PrintGrid(const grid::Grid[constants::kGridSize][constants::kGridSize], bool);  
 };
 
 
