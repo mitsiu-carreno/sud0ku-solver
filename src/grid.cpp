@@ -23,25 +23,30 @@ namespace grid{
     const short kAsciiLetterStart = 97;
     const short kAsciiNumberStart = 49; 
     if(input[0] < kAsciiLetterStart || input[0] > kAsciiLetterStart + constants::kGridSize - 1){
-      printw("invalid row %c, valid from %c-%c", input[0], toupper(kAsciiLetterStart), toupper(kAsciiLetterStart + constants::kGridSize - 1));
+      printw("Invalid row \"%c\", valid from \"%c\"-\"%c\"", input[0], toupper(kAsciiLetterStart), toupper(kAsciiLetterStart + constants::kGridSize - 1));
       getch();
       return false;
     }
     if(input[1] < kAsciiNumberStart || input[1] > kAsciiNumberStart + constants::kGridSize - 1){
-      printw("invalid column %c, valid from %c-%c", input[1], kAsciiNumberStart, (kAsciiNumberStart + constants::kGridSize -1));
+      printw("Invalid column \"%c\", valid from \"%c\"-\"%c\"", input[1], kAsciiNumberStart, (kAsciiNumberStart + constants::kGridSize -1));
       getch();
       return false;
     }
+    
     bool swap_third_position = false;
     if(input[2] >= kAsciiNumberStart && input[2] <= kAsciiNumberStart + constants::kGridSize - 1){
       swap_third_position = true;
     }else if(input[2] != 32){
-      printw("unexpected character %c", input[2]);
+      printw("Unexpected character \"%c\"", input[2]);
       getch();
       return false;
     }
     if(!swap_third_position && (input[3] < kAsciiNumberStart || input[3] > kAsciiNumberStart + constants::kGridSize - 1)){
-      printw("invalid value %c, expected from %c-%c", input[3], kAsciiNumberStart, (kAsciiNumberStart + constants::kGridSize - 1));
+      printw("Invalid value \"%c\", expected from \"%c\"-\"%c\"", input[3], kAsciiNumberStart, (kAsciiNumberStart + constants::kGridSize - 1));
+      getch();
+      return false;
+    }else if(swap_third_position && input[3] != '\0'){
+      printw("Wops some extra data \"%c\" was found and don't know how to interpret please try again", input[3]);
       getch();
       return false;
     }
