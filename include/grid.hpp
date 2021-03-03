@@ -11,12 +11,6 @@ namespace grid{
     void *value = nullptr;
   };
 
-  struct NewHint{
-    short x;
-    short y;
-    short value;
-  };
-  
   void InitGrid();
   void PrintGrid(const grid::Grid[constants::kGridSize][constants::kGridSize], bool);  
 };
