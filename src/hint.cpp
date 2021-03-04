@@ -63,55 +63,69 @@ namespace hint{
     return new_hint;
   }
  
-  // 
-  bool AddHint(hint::NewHint *new_hint, grid::Grid grid[constants::kGridSize][constants::kGridSize], std::vector<short> &hints){
-    
-    // Add new hint number to hints collection 
-    hints.push_back(new_hint->value);
-    
-    // Add new hint to grid
-    grid[new_hint->y][new_hint->x] = {true, &hints.back()};
-    return true;
+  // Create a grid with the current temp_hints entered
+  void MutateTempHintsToGrid(std::vector<NewHint> &temp_hints, grid::Grid temp_grid[constants::kGridSize][constants::kGridSize]){
+
+    // Read in reverse order to only get most recent ones
+    for(short index = temp_hints.size() -1; index >= 0; --index){
+      if(!temp_grid[temp_hints[index].y][temp_hints[index].x].value){
+        temp_grid[temp_hints[index].y][temp_hints[index].x] ={true, reinterpret_cast<void*>(&temp_hints[index].value)};
+      }
+    }
   }
 
+  // Ask user to enter as many hints as he wants
   void AskHints(grid::Grid grid[constants::kGridSize][constants::kGridSize]){
-    // Vector is prefered over dynamic array because length is discovered on run-time
-    // and still is growing with each hint added (safest way to do it is 
-    // creating an array with (kGridSize * kGridSize) size) that is a waste of mem
-    std::vector<short> hints;
+
+    // This is temporal because it will store the history of additions (to enable undo functionality)
+    std::vector<NewHint> temp_hints;
 
     while(true){
-      clear();
+      clear();  // clear screen
       const short kMaxInput = 5;
-      char input[kMaxInput];  // should we clean this var? naaa when overwritten, a new null termiator will be added
+      char input[kMaxInput];  // should we clean this var? naaa when overwritten, a new null terminator will be added
 
-      PrintGrid(grid, true);
+      // We create a new temp_grid each iteration (this might be performantly questionable) because we want to read only the current version of temp_hints
+      // If two hints where added at the same coordinate, we only care about the latter
+      grid::Grid temp_grid[constants::kGridSize][constants::kGridSize];
+      // We turn our temp_hints into a temp_grid (ignoring duplicates)
+      MutateTempHintsToGrid(temp_hints, temp_grid);
+
+      // For this iteration we print the current state of temp_grid
+      grid::PrintGrid(temp_grid, true);
       printw("\n");
 
-      printw("Enter the coordinate followed by the value (ex \"A1 5\"), \"c\" to undo or \"q\" to finish: ");
+
+      printw("Enter the coordinate followed by the value (ex \"A1 5\"), \"u\" to undo or \"q\" to finish: ");
       getnstr(input, kMaxInput -1);   // leave space for null terminator
       
       utils::InputToLower(input);
       
-      if(input[0] == 'c' && input[1] == '\0'){
-        //RemoveHintNumber();
+      if(input[0] == 'u' && input[1] == '\0'){
+        // Remove last position of our temp_hints
+        if(temp_hints.size() > 0){
+          temp_hints.pop_back();
+        }else{
+          printw("Ups there are no numbers to remove, try adding one first");
+        }
       }else if(input[0] == 'q' && input[1] == '\0'){
-        return;
+        break;
       }else{
-        //AddHint(nullptr, grid, hints);
-        
         NewHint *new_hint = ValidateNewHint(input);
         if(new_hint){
-          if(!AddHint(new_hint, grid, hints)){    
-            printw("Snap, an error ocurred while adding number, lets try again"); 
-            getch();
-          }                                 
+          // Add hint to our array
+          temp_hints.push_back({new_hint->x, new_hint->y, new_hint->value});
         }
+        //proper handling of our pointer :)
         delete new_hint;
         new_hint = nullptr;
-      } 
+      }
       refresh();
     }
+    // At this point user ended adding hints, now we want to turn our temp_hints into real hints to point to this end-result hint collection
+    // Should this be a pointer (probably, cause it must exist beyond this function)
+    // MutateTempHintsToHints(temp_hints);
+    // MutateTempHintsToGrid(hints, grid);
   }
 }
 

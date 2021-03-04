@@ -1,6 +1,7 @@
 #include "constants.hpp"
 #include "grid.hpp"
 #include "hint.hpp"
+#include "square.hpp"
 #include <algorithm>  // std::fill
 #include <ncurses.h>
 
@@ -50,26 +51,30 @@ namespace grid{
     }
 
     
-    for(short x {0}, row_letter {65}; x < constants::kGridSize; ++x, ++row_letter){
+    for(short g_row {0}, row_letter {65}; g_row < constants::kGridSize; ++g_row, ++row_letter){
       if(show_guides){
         printw("%c * ", row_letter);
       }
 
-      for(short y = 0; y < constants::kGridSize; ++y){
-        // if grid[x][y].value is nullptr
-        if(!grid[x][y].value){
+      for(short g_col = 0; g_col < constants::kGridSize; ++g_col){
+        // if grid[g_row][g_col].value is nullptr
+        if(!grid[g_row][g_col].value){
           printw(" ");
         }else{
-          // This need redo when square guess are implemented
-          printw("%d", *static_cast<short*>(grid[x][y].value));
+          if(grid[g_row][g_col].short_type){
+            printw("%d", *static_cast<short*>(grid[g_row][g_col].value));
+          }else{
+            // To be tested
+            printw("%d", static_cast<square::Square*>(grid[g_row][g_col].value)->current_value);
+          }
         }
         
-        if(PrintDivisionHere(y)){
+        if(PrintDivisionHere(g_col)){
           printw("|");
         }
       }
       printw("\n");  
-      if(PrintDivisionHere(x)){
+      if(PrintDivisionHere(g_row)){
         char divider[constants::kGridSize + constants::kGridSection];
         std::fill(divider, divider + constants::kGridSize + constants::kGridSection -1, '-');
         if(show_guides){
