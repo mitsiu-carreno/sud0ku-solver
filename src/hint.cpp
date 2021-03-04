@@ -64,32 +64,52 @@ namespace hint{
   }
  
   // Create a grid with the current temp_hints entered
-  void MutateTempHintsToGrid(std::vector<NewHint> &temp_hints, grid::Grid temp_grid[constants::kGridSize][constants::kGridSize]){
+  short MutateHintsToGrid(std::vector<NewHint> &temp_hints, grid::Grid grid[constants::kGridSize][constants::kGridSize]){
+    short unique_hints {0};
 
     // Read in reverse order to only get most recent ones
     for(short index = temp_hints.size() -1; index >= 0; --index){
-      if(!temp_grid[temp_hints[index].y][temp_hints[index].x].value){
-        temp_grid[temp_hints[index].y][temp_hints[index].x] ={true, reinterpret_cast<void*>(&temp_hints[index].value)};
+      if(!grid[temp_hints[index].y][temp_hints[index].x].value){
+        grid[temp_hints[index].y][temp_hints[index].x] ={true, reinterpret_cast<void*>(&temp_hints[index].value)};
+        ++unique_hints;
       }
     }
+    return unique_hints;
+  }
+
+  // Our temp_hints vector may have some duplicates (kept for history undo purposes) that we dont want to carry anymore, in this function we get rid of historical data, just keeping the latest info per coordinate 
+  short* CreateHintsArray(grid::Grid grid[constants::kGridSize][constants::kGridSize], std::vector<NewHint> &temp_hints, const short unique_hints){
+    // This will be the array pointed to
+    short *hints{new short[unique_hints]};
+    short hints_added {0};
+
+    for(short temp_hints_index = temp_hints.size()-1; temp_hints_index >= 0; --temp_hints_index){
+      if(!grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x].value){
+        hints[hints_added] = temp_hints[temp_hints_index].value;
+        grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x] = {true, reinterpret_cast<void*>(&hints[hints_added])};
+        ++hints_added;
+      }
+    }
+    return hints;
   }
 
   // Ask user to enter as many hints as he wants
-  void AskHints(grid::Grid grid[constants::kGridSize][constants::kGridSize]){
+  short* AskHints(grid::Grid grid[constants::kGridSize][constants::kGridSize]){
 
     // This is temporal because it will store the history of additions (to enable undo functionality)
     std::vector<NewHint> temp_hints;
+    short unique_hints {0};
 
     while(true){
       clear();  // clear screen
       const short kMaxInput = 5;
       char input[kMaxInput];  // should we clean this var? naaa when overwritten, a new null terminator will be added
 
-      // We create a new temp_grid each iteration (this might be performantly questionable) because we want to read only the current version of temp_hints
+      // We create a new temp_grid each iteration (I know this might be performantly questionable) because we want to read only the current version of temp_hints
       // If two hints where added at the same coordinate, we only care about the latter
       grid::Grid temp_grid[constants::kGridSize][constants::kGridSize];
       // We turn our temp_hints into a temp_grid (ignoring duplicates)
-      MutateTempHintsToGrid(temp_hints, temp_grid);
+      unique_hints = MutateHintsToGrid(temp_hints, temp_grid);
 
       // For this iteration we print the current state of temp_grid
       grid::PrintGrid(temp_grid, true);
@@ -123,9 +143,12 @@ namespace hint{
       refresh();
     }
     // At this point user ended adding hints, now we want to turn our temp_hints into real hints to point to this end-result hint collection
-    // Should this be a pointer (probably, cause it must exist beyond this function)
-    // MutateTempHintsToHints(temp_hints);
-    // MutateTempHintsToGrid(hints, grid);
+    short *hints = CreateHintsArray(grid, temp_hints, unique_hints);
+    if(!hints){
+      printw("Woops, this one goes on the programmer, sorry, we can't continue until we punish him :c\n");
+    }
+    // debug should we return the hints array size too? (nique_hints)
+    return hints;
   }
 }
 

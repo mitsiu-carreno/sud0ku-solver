@@ -11,7 +11,7 @@ namespace hint{
     short value;
   };
 
-  void AskHints(grid::Grid[constants::kGridSize][constants::kGridSize]);
+  short* AskHints(grid::Grid[constants::kGridSize][constants::kGridSize]);
 }
 
 #endif

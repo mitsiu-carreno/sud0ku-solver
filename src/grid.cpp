@@ -13,8 +13,18 @@ namespace grid{
 
     grid::Grid grid[constants::kGridSize][constants::kGridSize];
 
-    hint::AskHints(grid);
+    short *hints = hint::AskHints(grid);
+    if(!hints){
+      return;
+    }
 
+    clear();
+    PrintGrid(grid, false);
+    getch();
+    //for()
+    // proper handling of our pointer :)
+    delete[] hints;
+    hints = nullptr;
 
   }
 
