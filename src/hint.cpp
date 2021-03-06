@@ -8,7 +8,7 @@
 
 namespace hint{
   // Check if input is a valid coordinate
-  NewHint* ValidateNewHint(char *input){
+  NewHint* ValidateHintInput(char *input){
     // check length until null terminator
     short i{0};
     while(input[i]){
@@ -62,6 +62,23 @@ namespace hint{
     //printw("valid x=%d, y=%d, val=%d", new_hint.x, new_hint.y, new_hint.value);
     
     return new_hint;
+  }
+  
+  bool ValidateNewHint(const std::vector<NewHint> &temp_hints, NewHint *new_hint){
+    for(const NewHint &hint : temp_hints){
+      if(hint.y == new_hint->y && hint.value == new_hint->value){
+        printw("Error row");
+        getch();
+        return false;
+      }
+      if(hint.x == new_hint->x && hint.value == new_hint->value){
+        printw("Error col");
+        getch();
+        return false;
+      }
+      // ToDo: check hint in box and format error messages above
+    }
+    return true;
   }
  
   // Create a grid with the current temp_hints entered
@@ -132,12 +149,14 @@ namespace hint{
           temp_hints.pop_back();
         }else{
           printw("Ups there are no numbers to remove, try adding one first");
+          getch();
         }
       }else if(input[0] == 'q' && input[1] == '\0'){
         break;
       }else{
-        NewHint *new_hint = ValidateNewHint(input);
-        if(new_hint){
+        NewHint *new_hint = ValidateHintInput(input);
+        // Check if new_hint is valid ptr and check if is valid by sud0ku rules
+        if(new_hint && ValidateNewHint(temp_hints, new_hint)){
           // Add hint to our array
           temp_hints.push_back({new_hint->x, new_hint->y, new_hint->value});
         }
