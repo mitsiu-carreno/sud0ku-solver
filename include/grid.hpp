@@ -11,6 +11,8 @@ namespace grid{
     void *value = nullptr;
   };
 
+  using grid_t = grid::Grid[constants::kGridSize][constants::kGridSize];
+
   void InitGrid();
   void PrintGrid(const grid::Grid[constants::kGridSize][constants::kGridSize], bool);  
 };

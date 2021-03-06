@@ -14,7 +14,8 @@ namespace hint{
     while(input[i]){
       ++i;
     }
-    if(i < 3 || i > 4){
+    // If input length is lower than 3 we don't have enough info
+    if(i < 3){
       printw("Insufficient data, type the row letter \"A\", the column number \"1\", white space \" \" and the desired value \"5\"");
       getch();
       return nullptr;
@@ -67,7 +68,7 @@ namespace hint{
   short MutateHintsToGrid(std::vector<NewHint> &temp_hints, grid::Grid grid[constants::kGridSize][constants::kGridSize]){
     short unique_hints {0};
 
-    // Read in reverse order to only get most recent ones
+    // Read backwards to read LIFO and ignore overlapped coordinates
     for(short index = temp_hints.size() -1; index >= 0; --index){
       if(!grid[temp_hints[index].y][temp_hints[index].x].value){
         grid[temp_hints[index].y][temp_hints[index].x] ={true, reinterpret_cast<void*>(&temp_hints[index].value)};
@@ -77,13 +78,16 @@ namespace hint{
     return unique_hints;
   }
 
-  // Our temp_hints vector may have some duplicates (kept for history undo purposes) that we dont want to carry anymore, in this function we get rid of historical data, just keeping the latest info per coordinate 
+  // Our temp_hints vector may have some duplicates (kept for history undo purposes) that we dont want to carry anymore,
+  // in this function we get rid of historical data, just keeping the latest info per coordinate 
   short* CreateHintsArray(grid::Grid grid[constants::kGridSize][constants::kGridSize], std::vector<NewHint> &temp_hints, const short unique_hints){
-    // This will be the array pointed to
+    // This will be the array containing the shorts, grid::Grid.value will point to 
     short *hints{new short[unique_hints]};
     short hints_added {0};
 
+    // Read backwards to read LIFO and ignore overlapped coordinates 
     for(short temp_hints_index = temp_hints.size()-1; temp_hints_index >= 0; --temp_hints_index){
+      // Search in grid based on temp_hints coords if value found, ignore 
       if(!grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x].value){
         hints[hints_added] = temp_hints[temp_hints_index].value;
         grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x] = {true, reinterpret_cast<void*>(&hints[hints_added])};
@@ -96,19 +100,20 @@ namespace hint{
   // Ask user to enter as many hints as he wants
   short* AskHints(grid::Grid grid[constants::kGridSize][constants::kGridSize]){
 
-    // This is temporal because it will store the history of additions (to enable undo functionality)
+    // We create a vector that will store all the hints inputed, even if they overlap coordinates
+    // this to be able to undo overlapped values
     std::vector<NewHint> temp_hints;
     short unique_hints {0};
 
     while(true){
       clear();  // clear screen
-      const short kMaxInput = 5;
+      const short kMaxInput = 4;
       char input[kMaxInput];  // should we clean this var? naaa when overwritten, a new null terminator will be added
 
-      // We create a new temp_grid each iteration (I know this might be performantly questionable) because we want to read only the current version of temp_hints
-      // If two hints where added at the same coordinate, we only care about the latter
+      // We create a new temp_grid each iteration (I know this might be performantly questionable) 
+      // but we want to only dispaly based on the current version of temp_hints
       grid::Grid temp_grid[constants::kGridSize][constants::kGridSize];
-      // We turn our temp_hints into a temp_grid (ignoring duplicates)
+      // We turn our temp_hints into a temp_grid (and take the last hint if overlap coordinates exists)
       unique_hints = MutateHintsToGrid(temp_hints, temp_grid);
 
       // For this iteration we print the current state of temp_grid
@@ -117,7 +122,7 @@ namespace hint{
 
 
       printw("Enter the coordinate followed by the value (ex \"A1 5\"), \"u\" to undo or \"q\" to finish: ");
-      getnstr(input, kMaxInput -1);   // leave space for null terminator
+      getnstr(input, kMaxInput);   // leave space for null terminator
       
       utils::InputToLower(input);
       

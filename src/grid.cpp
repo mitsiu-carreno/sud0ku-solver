@@ -37,6 +37,21 @@ namespace grid{
     }
   }
 
+  // Cast the value of a given coordinate of the grid,
+  // IF NO VALUE IS FOUND RETURNS 0
+  short GetGridValue(const grid_t grid, short row, short col){
+    // if grid[row][col].value is nullptr
+    if(!grid[row][col].value){
+      return 0;
+    }else{
+      if(grid[row][col].short_type){
+        return *static_cast<short*>(grid[row][col].value);
+      }else{
+        return static_cast<square::Square*>(grid[row][col].value)->current_value;
+      }
+    }
+  }
+
   // Display grid in screen, add dividers for boxes and can display guides for square localization
   void PrintGrid(const grid::Grid grid[constants::kGridSize][constants::kGridSize], bool show_guides=false){
     if(show_guides){
@@ -67,16 +82,11 @@ namespace grid{
       }
 
       for(short g_col = 0; g_col < constants::kGridSize; ++g_col){
-        // if grid[g_row][g_col].value is nullptr
-        if(!grid[g_row][g_col].value){
+        short value = GetGridValue(grid, g_row, g_col);
+        if(value == 0){
           printw(" ");
         }else{
-          if(grid[g_row][g_col].short_type){
-            printw("%d", *static_cast<short*>(grid[g_row][g_col].value));
-          }else{
-            // To be tested
-            printw("%d", static_cast<square::Square*>(grid[g_row][g_col].value)->current_value);
-          }
+          printw("%d", value);
         }
         
         if(PrintDivisionHere(g_col)){
