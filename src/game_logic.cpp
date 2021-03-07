@@ -49,7 +49,7 @@ namespace game_logic{
   } 
   
   /*
-  short[constants::kGridSize] GetAvailableNumbers(grid::Grid grid[constants::kGridSize][constants::kGridSize], short row, short col){
+  short[constants::kGridSize] GetAvailableNumbers(grid::grid_t grid, short row, short col){
     return ;
   }
   */

@@ -11,7 +11,7 @@ namespace grid{
   // Creates grid, and ask user for hint numbers
   void InitGrid(){
 
-    grid::Grid grid[constants::kGridSize][constants::kGridSize];
+    grid::grid_t grid;
 
     short *hints = hint::AskHints(grid);
     if(!hints){
@@ -53,7 +53,7 @@ namespace grid{
   }
 
   // Display grid in screen, add dividers for boxes and can display guides for square localization
-  void PrintGrid(const grid::Grid grid[constants::kGridSize][constants::kGridSize], bool show_guides=false){
+  void PrintGrid(const grid::grid_t grid, bool show_guides=false){
     if(show_guides){
       // if show_guides set guides for first two rows, first row letter second divider
       for(short tmp_row {0}; tmp_row < 2; ++tmp_row){

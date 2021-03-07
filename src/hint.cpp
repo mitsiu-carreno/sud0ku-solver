@@ -101,7 +101,7 @@ namespace hint{
   }
  
   // Create a grid with the current temp_hints entered
-  short MutateHintsToGrid(std::vector<NewHint> &temp_hints, grid::Grid grid[constants::kGridSize][constants::kGridSize]){
+  short MutateHintsToGrid(std::vector<NewHint> &temp_hints, grid::grid_t grid){
     short unique_hints {0};
 
     // Read backwards to read LIFO and ignore overlapped coordinates
@@ -116,7 +116,7 @@ namespace hint{
 
   // Our temp_hints vector may have some duplicates (kept for history undo purposes) that we dont want to carry anymore,
   // in this function we get rid of historical data, just keeping the latest info per coordinate 
-  short* CreateHintsArray(grid::Grid grid[constants::kGridSize][constants::kGridSize], std::vector<NewHint> &temp_hints, const short unique_hints){
+  short* CreateHintsArray(grid::grid_t grid, std::vector<NewHint> &temp_hints, const short unique_hints){
     // This will be the array containing the shorts, grid::Grid.value will point to 
     short *hints{new short[unique_hints]};
     short hints_added {0};
@@ -134,7 +134,7 @@ namespace hint{
   }
 
   // Ask user to enter as many hints as he wants
-  short* AskHints(grid::Grid grid[constants::kGridSize][constants::kGridSize]){
+  short* AskHints(grid::grid_t grid){
 
     // We create a vector that will store all the hints inputed, even if they overlap coordinates
     // this to be able to undo overlapped values
@@ -148,7 +148,7 @@ namespace hint{
 
       // We create a new temp_grid each iteration (I know this might be performantly questionable) 
       // but we want to only dispaly based on the current version of temp_hints
-      grid::Grid temp_grid[constants::kGridSize][constants::kGridSize];
+      grid::grid_t temp_grid;
       // We turn our temp_hints into a temp_grid (and take the last hint if overlap coordinates exists)
       unique_hints = MutateHintsToGrid(temp_hints, temp_grid);
 
