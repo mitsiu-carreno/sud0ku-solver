@@ -2,6 +2,7 @@
 #include "constants.hpp"
 #include "grid.hpp"
 #include "utils.hpp"
+#include "game_logic.hpp"
 #include <ctype.h>    // toupper
 #include <ncurses.h>
 #include <vector>
@@ -65,20 +66,37 @@ namespace hint{
   }
   
   bool ValidateNewHint(const std::vector<NewHint> &temp_hints, NewHint *new_hint){
+    
+    bool result = true;
+    short box_neighboors_length = 0;
+    game_logic::Coords *box_neighboors = game_logic::GetBoxCoords(new_hint->y, new_hint->x, box_neighboors_length);
+
     for(const NewHint &hint : temp_hints){
       if(hint.y == new_hint->y && hint.value == new_hint->value){
-        printw("Error row");
+        printw("Woops value %d is already on this row", new_hint->value);
         getch();
-        return false;
-      }
-      if(hint.x == new_hint->x && hint.value == new_hint->value){
-        printw("Error col");
+        result = false;
+      }else if(hint.x == new_hint->x && hint.value == new_hint->value){
+        printw("Woops value %d is already on this column", new_hint->value);
         getch();
-        return false;
+        result = false;
       }
-      // ToDo: check hint in box and format error messages above
+      for(short box_neighboors_index{0}; box_neighboors_index < box_neighboors_length; ++box_neighboors_index){
+        // If hint is neighboor and has the same value as new_hint
+        if(hint.x == box_neighboors[box_neighboors_index].col 
+            && hint.y == box_neighboors[box_neighboors_index].row
+            && hint.value == new_hint->value){
+          printw("Woops value %d is already on this box", new_hint->value);
+          getch();
+
+          result = false;
+        }
+      }
     }
-    return true;
+    delete[] box_neighboors;
+    box_neighboors = nullptr;
+    
+    return result;
   }
  
   // Create a grid with the current temp_hints entered

@@ -8,6 +8,13 @@ namespace game_logic{
     kCol,
     kBox,
   };
+
+  struct Coords{
+    short row;
+    short col;
+  };
+
+  Coords* GetBoxCoords(short, short, short&);
 }
 
 #endif
