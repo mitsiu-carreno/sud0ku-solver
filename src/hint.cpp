@@ -68,8 +68,8 @@ namespace hint{
   bool ValidateNewHint(const std::vector<NewHint> &temp_hints, NewHint *new_hint){
     
     bool result = true;
-    short box_neighboors_length = 0;
-    game_logic::Coords *box_neighboors = game_logic::GetBoxCoords(new_hint->y, new_hint->x, box_neighboors_length);
+    short box_neighbors_length = 0;
+    game_logic::Coords *box_neighbors = game_logic::GetBoxCoords(new_hint->y, new_hint->x, box_neighbors_length);
 
     for(const NewHint &hint : temp_hints){
       if(hint.y == new_hint->y && hint.value == new_hint->value){
@@ -81,10 +81,10 @@ namespace hint{
         getch();
         result = false;
       }else if(result){
-        for(short box_neighboors_index{0}; box_neighboors_index < box_neighboors_length; ++box_neighboors_index){
+        for(short box_neighbors_index{0}; box_neighbors_index < box_neighbors_length; ++box_neighbors_index){
           // If hint is neighboor and has the same value as new_hint
-          if(hint.x == box_neighboors[box_neighboors_index].col 
-            && hint.y == box_neighboors[box_neighboors_index].row
+          if(hint.x == box_neighbors[box_neighbors_index].col 
+            && hint.y == box_neighbors[box_neighbors_index].row
             && hint.value == new_hint->value){
             printw("Woops value %d is already on this box", new_hint->value);
             getch();
@@ -94,8 +94,8 @@ namespace hint{
         }
       }
     }
-    delete[] box_neighboors;
-    box_neighboors = nullptr;
+    delete[] box_neighbors;
+    box_neighbors = nullptr;
     
     return result;
   }

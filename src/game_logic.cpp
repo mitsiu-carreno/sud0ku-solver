@@ -5,9 +5,9 @@
 
 namespace game_logic{
 
-  Coords* GetBoxCoords(short current_row, short current_col, short &box_neighboors_length){
-    box_neighboors_length = pow(constants::kGridSize/constants::kGridSection, 2);
-    Coords *box_neighboors {new Coords[box_neighboors_length] };
+  Coords* GetBoxCoords(short current_row, short current_col, short &box_neighbors_length){
+    box_neighbors_length = pow(constants::kGridSize/constants::kGridSection, 2);
+    Coords *box_neighbors {new Coords[box_neighbors_length] };
 
     short box_length {constants::kGridSize/constants::kGridSection};
 
@@ -25,11 +25,11 @@ namespace game_logic{
     short i {0};
     for(short index_row {starting_box_row}; index_row < starting_box_row + box_length; ++index_row){
       for(short index_col {starting_box_col}; index_col < starting_box_col + box_length; ++index_col){
-        box_neighboors[i] = {index_row, index_col};
+        box_neighbors[i] = {index_row, index_col};
         ++i;
       }
     }
-    return box_neighboors;
+    return box_neighbors;
   }
 
   bool FindNumRow(const grid::grid_t grid, short row, short col, short number){
