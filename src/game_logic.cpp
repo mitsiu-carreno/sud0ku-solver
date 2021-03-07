@@ -11,12 +11,16 @@ namespace game_logic{
 
     short box_length {constants::kGridSize/constants::kGridSection};
 
-    // Boxes are treated like a normal coord (top left being [0,0], top right [0,2]...)
-    Coords current_box = {static_cast<short>(current_row/box_length), static_cast<short>(current_col/box_length)};
+    // Helper variables that will marking the top left coords of the current box
+    short starting_box_row {current_row};
+    short starting_box_col {current_col};
 
-    // Helper variables marking the top left coords of the current box
-    short starting_box_row {static_cast<short>(current_box.row * box_length)};
-    short starting_box_col {static_cast<short>(current_box.col * box_length)}; 
+    while(starting_box_row % box_length != 0){
+      --starting_box_row;
+    }
+    while(starting_box_col % box_length != 0){
+      --starting_box_col;
+    }
 
     short i {0};
     for(short index_row {starting_box_row}; index_row < starting_box_row + box_length; ++index_row){

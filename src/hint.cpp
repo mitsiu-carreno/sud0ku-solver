@@ -76,20 +76,21 @@ namespace hint{
         printw("Woops value %d is already on this row", new_hint->value);
         getch();
         result = false;
-      }else if(hint.x == new_hint->x && hint.value == new_hint->value){
+      }else if(result && hint.x == new_hint->x && hint.value == new_hint->value){
         printw("Woops value %d is already on this column", new_hint->value);
         getch();
         result = false;
-      }
-      for(short box_neighboors_index{0}; box_neighboors_index < box_neighboors_length; ++box_neighboors_index){
-        // If hint is neighboor and has the same value as new_hint
-        if(hint.x == box_neighboors[box_neighboors_index].col 
+      }else if(result){
+        for(short box_neighboors_index{0}; box_neighboors_index < box_neighboors_length; ++box_neighboors_index){
+          // If hint is neighboor and has the same value as new_hint
+          if(hint.x == box_neighboors[box_neighboors_index].col 
             && hint.y == box_neighboors[box_neighboors_index].row
             && hint.value == new_hint->value){
-          printw("Woops value %d is already on this box", new_hint->value);
-          getch();
+            printw("Woops value %d is already on this box", new_hint->value);
+            getch();
 
-          result = false;
+            result = false;
+          }
         }
       }
     }
