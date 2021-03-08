@@ -70,6 +70,10 @@ namespace hint{
     bool result = true;
     short box_neighbors_length = 0;
     game_logic::Coords *box_neighbors = game_logic::GetBoxCoords(new_hint->y, new_hint->x, box_neighbors_length);
+    if(!box_neighbors){
+      printw("An error ocurred while validating the new hint, let's try again while we punish the programmer; Execute punish #1214");
+      getch();
+    }
 
     for(const NewHint &hint : temp_hints){
       if(hint.y == new_hint->y && hint.value == new_hint->value){
@@ -175,9 +179,14 @@ namespace hint{
       }else{
         NewHint *new_hint = ValidateHintInput(input);
         // Check if new_hint is valid ptr and check if is valid by sud0ku rules
-        if(new_hint && ValidateNewHint(temp_hints, new_hint)){
-          // Add hint to our array
-          temp_hints.push_back({new_hint->x, new_hint->y, new_hint->value});
+        if(new_hint){
+          if(ValidateNewHint(temp_hints, new_hint)){
+            // Add hint to our array
+            temp_hints.push_back({new_hint->x, new_hint->y, new_hint->value});
+          }
+        }else{
+          printw("An error ocurred while creating the new hint let's try again while we execute punish #CS30 on the programmer");
+          getch();
         }
         //proper handling of our pointer :)
         delete new_hint;
@@ -188,7 +197,7 @@ namespace hint{
     // At this point user ended adding hints, now we want to turn our temp_hints into real hints to point to this end-result hint collection
     short *hints = CreateHintsArray(grid, temp_hints, unique_hints);
     if(!hints){
-      printw("Woops, this one goes on the programmer, sorry, we can't continue until we punish him :c\n");
+      printw("Woops, this one goes on the programmer, sorry, we can't continue until we punish him :c; Execute punish #5528\n");
     }
     // debug should we return the hints array size too? (nique_hints)
     return hints;

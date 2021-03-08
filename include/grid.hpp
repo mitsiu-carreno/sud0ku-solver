@@ -13,9 +13,9 @@ namespace grid{
 
   using grid_t = grid::Grid[constants::kGridSize][constants::kGridSize];
 
-  void InitGrid();
+  short* InitGrid(grid_t);
   void PrintGrid(const grid_t, bool);  
-};
+}
 
 
 #endif

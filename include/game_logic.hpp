@@ -1,6 +1,8 @@
 #ifndef GAME_LOGIC_H
 #define GAME_LOGIC_H
 
+#include "grid.hpp"
+
 namespace game_logic{
   enum class NumDuplicateError{
     kOk = 0,
@@ -15,6 +17,7 @@ namespace game_logic{
   };
 
   Coords* GetBoxCoords(short, short, short&);
+  void SolveSud0ku(grid::grid_t);
 }
 
 #endif

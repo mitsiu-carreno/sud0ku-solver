@@ -2,6 +2,7 @@
 #include "grid.hpp"
 #include "hint.hpp"
 #include "square.hpp"
+#include "game_metadata.hpp"
 #include <algorithm>  // std::fill
 #include <ncurses.h>
 
@@ -9,22 +10,23 @@ namespace grid{
   
 
   // Creates grid, and ask user for hint numbers
-  void InitGrid(){
-
-    grid::grid_t grid;
+  short* InitGrid(grid_t grid){
+    /*
+    meta.grid = {new (std::nothrow) grid::Grid};
+    if(!meta.grid){
+      printw("Woops, looks like we are running low on memory, tell you what, close some programs/services you are not ussing and let's try again ;)");
+      getch();
+      return;
+    }
+    */
 
     short *hints = hint::AskHints(grid);
     if(!hints){
-      return;
+      return nullptr;
     }
 
     clear();
-    PrintGrid(grid, false);
-    getch();
-    //for()
-    // proper handling of our pointer :)
-    delete[] hints;
-    hints = nullptr;
+    return hints;
 
   }
 
@@ -54,6 +56,16 @@ namespace grid{
 
   // Display grid in screen, add dividers for boxes and can display guides for square localization
   void PrintGrid(const grid::grid_t grid, bool show_guides=false){
+    // Get screen size
+    int screen_width, screen_height;
+    getmaxyx(stdscr,screen_height,screen_width);
+    if(screen_width < 15){
+      printw("Your window is too small, please make the window bigger and try again");
+      getch();
+      return;
+    }
+    //int margin_left = screen_width/2 - 7;
+
     if(show_guides){
       // if show_guides set guides for first two rows, first row letter second divider
       for(short tmp_row {0}; tmp_row < 2; ++tmp_row){

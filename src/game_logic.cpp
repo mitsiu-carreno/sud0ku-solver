@@ -32,6 +32,39 @@ namespace game_logic{
     return box_neighbors;
   }
 
+  // Get all the possible values for a given coord
+  short * GetBacklogValues(short g_row, short g_col, short tmp_backlog_length){
+    return nullptr;
+  }
+
+  // Based on the given hints, store all possible values for each coord
+  bool FillSquares(grid::grid_t grid){
+
+    for(short g_row {0}; g_row < constants::kGridSize; ++g_row){
+      for(short g_col {0}; g_col < constants::kGridSize; ++g_col){
+        if(!grid[g_row][g_col].value){
+          short tmp_backlog_length {0};
+          short *tmp_ptr = GetBacklogValues(g_row, g_col, tmp_backlog_length);
+          if(tmp_ptr){
+            
+            //square::Square
+          }else{
+            return false; 
+          }
+        }
+      }
+    } 
+    return true;
+  }
+
+  // Function to handle the whole solving algorith
+  void SolveSud0ku(grid::grid_t grid){
+    FillSquares(grid);
+  }
+
+
+
+  /////////// Backlog
   bool FindNumRow(const grid::grid_t grid, short row, short col, short number){
     // BETTER BASED ON TEMP_HINTS LESS LOOPS
     /*for(short i{0}; i<constants::kGridSize; ++i){
