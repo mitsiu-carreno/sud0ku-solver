@@ -2,7 +2,10 @@
 #include "game_metadata.hpp"
 #include "constants.hpp"
 #include "grid.hpp"
+#include "utils.hpp"
 #include <math.h>   // pow
+#include <vector>
+#include <ncurses.h>
 
 namespace game_logic{
 
@@ -34,20 +37,63 @@ namespace game_logic{
   }
 
   // Get all the possible values for a given coord
-  short * GetBacklogValues(short g_row, short g_col, short tmp_backlog_length){
+  short* GetBacklogValues(const short g_row, const short g_col, grid::SquareMeta (*grid)[constants::kGridSize], short &tmp_backlog_length){
+    std::vector<short> taken_values;
+    // Get hints from row and coll 
+    for(short i{0}; i < constants::kGridSize; ++i){
+      // Returns 0 if empty
+      short row_value = grid::GetGridValue(grid, g_row, i); 
+      short col_value = grid::GetGridValue(grid, i, g_col);
+      if(row_value && utils::FindIndexInSet(taken_values, row_value) == -1){
+        taken_values.push_back(row_value);
+      }
+      if(col_value && utils::FindIndexInSet(taken_values, col_value) == -1){
+        taken_values.push_back(col_value);
+      }
+    }
+
+    // Get hints from same box
+    short box_neighbors_length = 0;
+    game_logic::Coords *box_neighbors = GetBoxCoords(g_row, g_col, box_neighbors_length);
+    if(!box_neighbors){
+      printw("An error ocurred while solving this sud0ku, but don't get to flattered, is not that you crack the algorithm, is our stupid programmer, which will receive the #1988 punishment\n");
+      getch();
+      return nullptr;
+    }
+
+    for(short box_neighbors_index{0}; box_neighbors_index < box_neighbors_length; ++box_neighbors_index){
+      short box_neighbors_value = grid::GetGridValue(grid, box_neighbors[box_neighbors_index].row, box_neighbors[box_neighbors_index].col);
+      if(box_neighbors_value && utils::FindIndexInSet(taken_values, box_neighbors_value) == -1){
+        taken_values.push_back(box_neighbors_value);
+      } 
+    }
+
+    printw("final\n");
+    for(auto e : taken_values){
+      printw("%d ", e);
+    }
+    getch();
     return nullptr;
   }
 
   // Based on the given hints, store all possible values for each coord
   bool FillSquares(game_metadata::Meta &meta){
 
+    short number_squares = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
+    meta.squares = {new (std::nothrow) square::Square[number_squares]};
+    if(!meta.squares){
+      printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
+      getch();
+      return false;
+    }
+
     for(short g_row {0}; g_row < constants::kGridSize; ++g_row){
       for(short g_col {0}; g_col < constants::kGridSize; ++g_col){
         if(!meta.grid[g_row][g_col].value){
           short tmp_backlog_length {0};
-          short *tmp_ptr = GetBacklogValues(g_row, g_col, tmp_backlog_length);
+          short *tmp_ptr = GetBacklogValues(g_row, g_col, meta.grid, tmp_backlog_length);
           if(tmp_ptr){
-            
+            return false; 
             //square::Square
           }else{
             return false; 
