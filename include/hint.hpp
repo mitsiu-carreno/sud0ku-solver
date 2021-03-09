@@ -3,6 +3,7 @@
 
 #include "grid.hpp"
 #include "constants.hpp"
+#include "game_metadata.hpp"
 
 namespace hint{
   struct NewHint{
@@ -11,7 +12,7 @@ namespace hint{
     short value;
   };
 
-  short* AskHints(grid::Grid[constants::kGridSize][constants::kGridSize]);
+  void AskHints(game_metadata::Meta &);
 }
 
 #endif

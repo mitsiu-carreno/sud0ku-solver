@@ -1,4 +1,5 @@
 #include "game_logic.hpp"
+#include "game_metadata.hpp"
 #include "constants.hpp"
 #include "grid.hpp"
 #include <math.h>   // pow
@@ -38,11 +39,11 @@ namespace game_logic{
   }
 
   // Based on the given hints, store all possible values for each coord
-  bool FillSquares(grid::grid_t grid){
+  bool FillSquares(game_metadata::Meta &meta){
 
     for(short g_row {0}; g_row < constants::kGridSize; ++g_row){
       for(short g_col {0}; g_col < constants::kGridSize; ++g_col){
-        if(!grid[g_row][g_col].value){
+        if(!meta.grid[g_row][g_col].value){
           short tmp_backlog_length {0};
           short *tmp_ptr = GetBacklogValues(g_row, g_col, tmp_backlog_length);
           if(tmp_ptr){
@@ -58,8 +59,8 @@ namespace game_logic{
   }
 
   // Function to handle the whole solving algorith
-  void SolveSud0ku(grid::grid_t grid){
-    FillSquares(grid);
+  void SolveSud0ku(game_metadata::Meta &meta){
+    FillSquares(meta);
   }
 
 

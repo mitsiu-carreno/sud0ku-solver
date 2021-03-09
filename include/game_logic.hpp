@@ -2,6 +2,7 @@
 #define GAME_LOGIC_H
 
 #include "grid.hpp"
+#include "game_metadata.hpp"
 
 namespace game_logic{
   enum class NumDuplicateError{
@@ -17,7 +18,7 @@ namespace game_logic{
   };
 
   Coords* GetBoxCoords(short, short, short&);
-  void SolveSud0ku(grid::grid_t);
+  void SolveSud0ku(game_metadata::Meta&);
 }
 
 #endif

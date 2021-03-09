@@ -10,24 +10,23 @@ namespace grid{
   
 
   // Creates grid, and ask user for hint numbers
-  short* InitGrid(grid_t grid){
-    /*
-    meta.grid = {new (std::nothrow) grid::Grid};
-    if(!meta.grid){
-      printw("Woops, looks like we are running low on memory, tell you what, close some programs/services you are not ussing and let's try again ;)");
-      getch();
-      return;
-    }
-    */
+  bool InitGrid(game_metadata::Meta &meta){
 
-    short *hints = hint::AskHints(grid);
-    if(!hints){
-      return nullptr;
+    meta.grid = {new (std::nothrow) grid::grid_t};
+    if(!meta.grid){
+      printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
+      getch();
+      return false;
+    }
+    
+    // Create and add hints array and hints_length to metadata
+    hint::AskHints(meta);
+    if(!meta.hints){
+      return false;
     }
 
     clear();
-    return hints;
-
+    return true;
   }
 
   // Help PrintGrid to determine if a divider should be placed in the current row/column (two dividers by each axis)

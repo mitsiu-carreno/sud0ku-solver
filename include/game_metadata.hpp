@@ -2,11 +2,17 @@
 #define GAME_METADATA_H
 
 #include "grid.hpp"
+#include "constants.hpp"
 #include "square.hpp"
 
+// Have to forward declare to compile line 15 (on include grid.hpp is called game_metadata.hpp)
+namespace grid{
+  struct Grid;
+}
+
 namespace game_metadata{
-  struct meta{
-    grid::grid_t *grid = nullptr;
+  struct Meta{
+    grid::Grid (*grid)[constants::kGridSize] = nullptr;
     short* hints = nullptr;
     short hints_length;
     square::Square* squares = nullptr;
