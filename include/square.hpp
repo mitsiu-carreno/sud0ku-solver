@@ -6,7 +6,8 @@ namespace square{
     short current_value;
     bool test_root;
     short backlog_length;
-    short *backlog_values[];
+    //short *backlog_values[];
+    short *backlog_values;
   };
 }
 

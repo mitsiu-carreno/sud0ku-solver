@@ -68,12 +68,17 @@ namespace game_logic{
       } 
     }
 
-    printw("final\n");
-    for(auto e : taken_values){
-      printw("%d ", e);
+    tmp_backlog_length = constants::kGridSize - taken_values.size();
+
+    short *backlog_values = new short[tmp_backlog_length];
+    for(short i{1}, backlog_index{0}; i<=constants::kGridSize; ++i){
+      if(utils::FindIndexInSet(taken_values, i) == -1){
+        backlog_values[backlog_index] = i;
+        ++backlog_index;
+      }
     }
-    getch();
-    return nullptr;
+
+    return backlog_values;
   }
 
   // Based on the given hints, store all possible values for each coord
@@ -87,15 +92,38 @@ namespace game_logic{
       return false;
     }
 
+    short squares_index {0};
+
     for(short g_row {0}; g_row < constants::kGridSize; ++g_row){
       for(short g_col {0}; g_col < constants::kGridSize; ++g_col){
         if(!meta.grid[g_row][g_col].value){
-          short tmp_backlog_length {0};
-          short *tmp_ptr = GetBacklogValues(g_row, g_col, meta.grid, tmp_backlog_length);
-          if(tmp_ptr){
-            return false; 
-            //square::Square
+          printw("Adding square for position %d, %d\n", g_row, g_col);  //debug
+          short backlog_length {0};
+          short *backlog_ptr = GetBacklogValues(g_row, g_col, meta.grid, backlog_length);
+          if(backlog_ptr){
+            // We create a new square object 
+            square::Square *new_square {new square::Square{0, false, backlog_length, backlog_ptr}};
+            if(!new_square){
+              printw("An error ocurred while saving the possible values  for each coord, please punish the programmer with the punishment code #2252");
+              getch();  
+              return false; 
+            }
+
+            printw("Possible values\n");
+            for(int i{0}; i<backlog_length; ++i){
+              printw("%d ", backlog_ptr[i]);
+            }
+            getch();
+            
+            // We save this new square in our square array in meta
+            meta.squares[squares_index] = *new_square;
+            ++squares_index;
+
+            grid::SquareMeta new_square_meta {false, new_square};
+            meta.grid[g_row][g_col] = new_square_meta;
           }else{
+            printw("An error ocurred while fining the possible values for each coord, please punish the programmer with the punishment code #5525");
+            getch();
             return false; 
           }
         }
