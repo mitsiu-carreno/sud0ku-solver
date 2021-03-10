@@ -8,7 +8,6 @@
 
 namespace grid{
   
-
   // Creates grid, and ask user for hint numbers
   bool InitGrid(game_metadata::Meta &meta){
 
@@ -20,8 +19,7 @@ namespace grid{
     }
     
     // Create and add hints array and hints_length to metadata
-    hint::AskHints(meta);
-    if(!meta.hints){
+    if(!hint::AskHints(meta)){
       return false;
     }
 

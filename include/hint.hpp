@@ -12,7 +12,7 @@ namespace hint{
     short value;
   };
 
-  void AskHints(game_metadata::Meta &);
+  bool AskHints(game_metadata::Meta &);
 }
 
 #endif

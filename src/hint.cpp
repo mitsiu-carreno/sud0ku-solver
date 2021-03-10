@@ -66,16 +66,19 @@ namespace hint{
     return new_hint;
   }
   
+  // We check that the new hint, doesn't repeat value on the same row, col and box
   bool ValidateNewHint(const std::vector<NewHint> &temp_hints, NewHint *new_hint){
     
     bool result = true;
     short box_neighbors_length = 0;
+    // Get the coords of the box neighbors of the given hint
     game_logic::Coords *box_neighbors = game_logic::GetBoxCoords(new_hint->y, new_hint->x, box_neighbors_length);
     if(!box_neighbors){
       printw("An error ocurred while validating the new hint, let's try again while we punish the programmer; Execute punish #1214");
       getch();
     }
 
+    // We don't have to check the whole temp_grid, since is mostly empty except for the hints already given
     for(const NewHint &hint : temp_hints){
       if(hint.y == new_hint->y && hint.value == new_hint->value){
         printw("Woops value %d is already on this row", new_hint->value);
@@ -124,25 +127,29 @@ namespace hint{
 
   // Our temp_hints vector may have some duplicates (kept for history undo purposes) that we dont want to carry anymore,
   // in this function we get rid of historical data, just keeping the latest info per coordinate 
-  short* CreateHintsArray(grid::grid_t grid, std::vector<NewHint> &temp_hints, const short unique_hints){
-    // This will be the array containing the shorts, grid::Grid.value will point to 
-    short *hints{new short[unique_hints]};
-    short hints_added {0};
-
+  bool CreateHintsArray(grid::grid_t grid, std::vector<NewHint> &temp_hints, const short unique_hints){
+    
     // Read backwards to read LIFO and ignore overlapped coordinates 
     for(short temp_hints_index = temp_hints.size()-1; temp_hints_index >= 0; --temp_hints_index){
       // Search in grid based on temp_hints coords if value found, ignore 
       if(!grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x].value){
-        hints[hints_added] = temp_hints[temp_hints_index].value;
-        grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x] = {true, reinterpret_cast<void*>(&hints[hints_added])};
-        ++hints_added;
+        // Here's the tricky part, grid is an array of SquareMeta's (no pointers) but each SquareMeta has a void pointer in this case we are pointing to shots
+        grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x] = grid::SquareMeta {true, reinterpret_cast<void*>(new short{temp_hints[temp_hints_index].value})};
+        
+        // Now lets check that everything is stored correctly
+        // grid[y][x] must exists, and value prop should point somewhere
+        if(!grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x].value){
+          printw("Something really really nasty has just happened, brint the programmer to execute punishment #46700");
+          getch();
+          return false;
+        }
       }
     }
-    return hints;
+    return true;
   }
 
   // Ask user to enter as many hints as he wants
-  void AskHints(game_metadata::Meta &meta){
+  bool AskHints(game_metadata::Meta &meta){
 
     // We create a vector that will store all the hints inputed, even if they overlap coordinates
     // this to be able to undo overlapped values
@@ -166,7 +173,7 @@ namespace hint{
 
 
       printw("Enter the coordinate followed by the value (ex \"A1 5\"), \"u\" to undo or \"q\" to finish: ");
-      getnstr(input, kMaxInput);   // leave space for null terminator
+      getnstr(input, kMaxInput);  
       
       utils::InputToLower(input);
       
@@ -196,13 +203,12 @@ namespace hint{
       }
       refresh();
     }
-    // At this point user ended adding hints, now we want to turn our temp_hints into real hints to point to this end-result hint collection
-    meta.hints = CreateHintsArray(meta.grid, temp_hints, unique_hints);
-    if(!meta.hints){
-      printw("Woops, this one goes on the programmer, sorry, we can't continue until we punish him :c; Execute punish #5528\n");
+    // At this point user ended adding hints, now we want to turn our temp_hints into real hints and link each new hint with SquareMeta
+    if(!CreateHintsArray(meta.grid, temp_hints, unique_hints)){
+      return false;;
     }
     meta.hints_length = unique_hints;
-
+    return true;
   }
 }
 
