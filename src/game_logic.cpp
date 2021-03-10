@@ -3,6 +3,7 @@
 #include "constants.hpp"
 #include "grid.hpp"
 #include "utils.hpp"
+#include "square.hpp"
 #include <math.h>   // pow
 #include <vector>
 #include <ncurses.h>
@@ -84,36 +85,28 @@ namespace game_logic{
   // Based on the given hints, store all possible values for each coord
   bool FillSquares(game_metadata::Meta &meta){
 
-    short number_squares = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
-    meta.squares = {new (std::nothrow) square::Square[number_squares]};
-    if(!meta.squares){
-      printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
-      getch();
-      return false;
-    }
-
-    short squares_index {0};
-
     for(short g_row {0}; g_row < constants::kGridSize; ++g_row){
       for(short g_col {0}; g_col < constants::kGridSize; ++g_col){
         if(!meta.grid[g_row][g_col].value){
           short backlog_length {0};
           short *backlog_ptr = GetAvailableValues(g_row, g_col, meta.grid, backlog_length);
           if(backlog_ptr){
-            // We create a new square object 
-            square::Square *new_square {new square::Square{0, false, backlog_length, backlog_ptr}};
-            if(!new_square){
-              printw("An error ocurred while saving the possible values  for each coord, please punish the programmer with the punishment code #2252");
-              getch();  
-              return false; 
+            // We create a new square object inside our grid and it's value will point to a new square::Square just created
+            meta.grid[g_row][g_col] = {grid::SquareMeta{false, reinterpret_cast<void*>(new square::Square {0, false, backlog_length, backlog_ptr})}};
+            
+            // Check that everything is stored correctly
+            if(!meta.grid[g_row][g_col].value){
+              printw("An error ocurred while pointing our new square at position [%d, %d], we will punish the programmer with punishment #2252");
+              getch();
+              return false;
             }
 
-            // We save this new square in our square array in meta
-            meta.squares[squares_index] = *new_square;
-            ++squares_index;
-            
-            // We point our new square in our grid
-            meta.grid[g_row][g_col] = {grid::SquareMeta{false, new_square}};
+            if(!reinterpret_cast<square::Square*>(meta.grid[g_row][g_col].value)->backlog_values){
+              printw("An error ocurred while storing the posible values at square [%d, %d], we will punish the programmer with punishment #5528");
+              getch();
+              return false;
+            }
+
           }else{
             printw("An error ocurred while fining the possible values for each coord, please punish the programmer with the punishment code #5525");
             getch();
