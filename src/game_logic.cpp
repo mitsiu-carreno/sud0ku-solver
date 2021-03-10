@@ -118,9 +118,9 @@ namespace game_logic{
             // We save this new square in our square array in meta
             meta.squares[squares_index] = *new_square;
             ++squares_index;
-
-            grid::SquareMeta new_square_meta {false, new_square};
-            meta.grid[g_row][g_col] = new_square_meta;
+            
+            // We point our new square in our grid
+            meta.grid[g_row][g_col] = {grid::SquareMeta{false, new_square}};
           }else{
             printw("An error ocurred while fining the possible values for each coord, please punish the programmer with the punishment code #5525");
             getch();
