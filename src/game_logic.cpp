@@ -37,7 +37,7 @@ namespace game_logic{
   }
 
   // Get all the possible values for a given coord
-  short* GetBacklogValues(const short g_row, const short g_col, grid::SquareMeta (*grid)[constants::kGridSize], short &tmp_backlog_length){
+  short* GetAvailableValues(const short g_row, const short g_col, grid::SquareMeta (*grid)[constants::kGridSize], short &tmp_backlog_length){
     std::vector<short> taken_values;
     // Get hints from row and coll 
     for(short i{0}; i < constants::kGridSize; ++i){
@@ -97,9 +97,8 @@ namespace game_logic{
     for(short g_row {0}; g_row < constants::kGridSize; ++g_row){
       for(short g_col {0}; g_col < constants::kGridSize; ++g_col){
         if(!meta.grid[g_row][g_col].value){
-          printw("Adding square for position %d, %d\n", g_row, g_col);  //debug
           short backlog_length {0};
-          short *backlog_ptr = GetBacklogValues(g_row, g_col, meta.grid, backlog_length);
+          short *backlog_ptr = GetAvailableValues(g_row, g_col, meta.grid, backlog_length);
           if(backlog_ptr){
             // We create a new square object 
             square::Square *new_square {new square::Square{0, false, backlog_length, backlog_ptr}};
@@ -109,12 +108,6 @@ namespace game_logic{
               return false; 
             }
 
-            printw("Possible values\n");
-            for(int i{0}; i<backlog_length; ++i){
-              printw("%d ", backlog_ptr[i]);
-            }
-            getch();
-            
             // We save this new square in our square array in meta
             meta.squares[squares_index] = *new_square;
             ++squares_index;
@@ -132,33 +125,71 @@ namespace game_logic{
     return true;
   }
 
+  // Find the Square that has the smallest backlog_length
+  Coords* FindBestStartingPoint(const game_metadata::Meta &meta){
+    // We set our flag with an impossible value, so we know if sud0ku is already solved (no squares exists)
+    short lowest_backlog_length = 10;
+    Coords *starting_coords = new Coords;
+
+    for(short row {0}; row < constants::kGridSize; ++row){
+      for(short col{0}; col < constants::kGridSize; ++col){
+        if(!meta.grid[row][col].short_type){
+          short new_backlog_length = reinterpret_cast<square::Square*>(meta.grid[row][col].value)->backlog_length;
+          printw("[%d, %d] - %d\t", row, col, new_backlog_length);
+          if(new_backlog_length < lowest_backlog_length){
+            lowest_backlog_length = new_backlog_length;
+            starting_coords->row = row;
+            starting_coords->col = col;
+          }
+        }
+      }
+    }
+    if(lowest_backlog_length == 10){
+      return nullptr;
+    }
+    return starting_coords;
+  }
+
   // Function to handle the whole solving algorith
   void SolveSud0ku(game_metadata::Meta &meta){
-    FillSquares(meta);
+    if(!FillSquares(meta)){
+      return;
+    }
+    
+    Coords* start_point = FindBestStartingPoint(meta);
+    if(!start_point){
+      printw("Either this sud0ku is already completed or we are doing something embarrassingly wrong, and if we are wrong, I am performing the harakiri because of my dishonor\n");
+      getch();
+    }
+
+    printw("Starting point is set to %d, %d", start_point->row, start_point->col);
+    getch();
+    // Debug
+    /*
+    for(int i{0}; i<3; ++i){
+      for(int j{0}; j<3; ++j){
+        if(meta.grid[i][j].short_type){
+          printw("%d", *reinterpret_cast<short*>(meta.grid[i][j].value));
+         getch(); 
+        }else{
+          for(short p{0}; p < reinterpret_cast<square::Square*>(meta.grid[i][j].value)->backlog_length; ++p){
+          
+            printw("%d ", reinterpret_cast<square::Square*>(meta.grid[i][j].value)->backlog_values[p]);
+          }
+          getch();
+        }
+      }
+    }
+    */  
   }
 
 
 
   /////////// Backlog
-  bool FindNumRow(const grid::grid_t grid, short row, short col, short number){
-    // BETTER BASED ON TEMP_HINTS LESS LOOPS
-    /*for(short i{0}; i<constants::kGridSize; ++i){
-      if
-    }
-    */
-    return true;
-  }
-
   game_logic::NumDuplicateError CheckNumber(const grid::grid_t grid, short row, short col, short number){
-    FindNumRow(grid, row, col, number);
+    //FindNumRow(grid, row, col, number);
     //CheckCol();
     //CheckBox();  
     return game_logic::NumDuplicateError::kOk;
   } 
-  
-  /*
-  short[constants::kGridSize] GetAvailableNumbers(grid::grid_t grid, short row, short col){
-    return ;
-  }
-  */
 }
