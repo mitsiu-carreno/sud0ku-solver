@@ -13,6 +13,7 @@ namespace game_metadata{
   struct Meta{
     grid::SquareMeta (*grid)[constants::kGridSize] = nullptr;
     short hints_length;
+    grid::SquareMeta **solution_path = nullptr;
   };
 }
 

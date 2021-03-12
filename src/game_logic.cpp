@@ -83,7 +83,7 @@ namespace game_logic{
   }
 
   // Based on the given hints, store all possible values for each coord
-  bool FillSquares(game_metadata::Meta &meta){
+  bool FillSquares(game_metadata::Meta &meta, std::vector<grid::SquareMeta*> *ptr[constants::kGridSize + 1]){
 
     for(short g_row {0}; g_row < constants::kGridSize; ++g_row){
       for(short g_col {0}; g_col < constants::kGridSize; ++g_col){
@@ -92,7 +92,7 @@ namespace game_logic{
           short *backlog_ptr = GetAvailableValues(g_row, g_col, meta.grid, backlog_length);
           if(backlog_ptr){
             // We create a new square object inside our grid and it's value will point to a new square::Square just created
-            meta.grid[g_row][g_col] = {grid::SquareMeta{false, reinterpret_cast<void*>(new square::Square {0, false, backlog_length, backlog_ptr})}};
+            meta.grid[g_row][g_col] = {grid::SquareMeta{false, reinterpret_cast<void*>(new square::Square {0, backlog_length, backlog_ptr})}};
             
             // Check that everything is stored correctly
             if(!meta.grid[g_row][g_col].value){
@@ -106,7 +106,9 @@ namespace game_logic{
               getch();
               return false;
             }
-
+      
+            // Add address based on backlog_length
+            ptr[backlog_length]->push_back(&meta.grid[g_row][g_col]);
           }else{
             printw("An error ocurred while fining the possible values for each coord, please punish the programmer with the punishment code #5525");
             getch();
@@ -118,62 +120,53 @@ namespace game_logic{
     return true;
   }
 
-  // Find the Square that has the smallest backlog_length
-  Coords* FindBestStartingPoint(const game_metadata::Meta &meta){
-    // We set our flag with an impossible value, so we know if sud0ku is already solved (no squares exists)
-    short lowest_backlog_length = 10;
-    Coords *starting_coords = new Coords;
+  // Define the order to test the possible values (stored in backlog_values)
+  bool GenerateSolutionPath(game_metadata::Meta &meta, std::vector<grid::SquareMeta*> *ptr[constants::kGridSize + 1]){
+    return false;
+  }
 
-    for(short row {0}; row < constants::kGridSize; ++row){
-      for(short col{0}; col < constants::kGridSize; ++col){
-        if(!meta.grid[row][col].short_type){
-          short new_backlog_length = reinterpret_cast<square::Square*>(meta.grid[row][col].value)->backlog_length;
-          printw("[%d, %d] - %d\t", row, col, new_backlog_length);
-          if(new_backlog_length < lowest_backlog_length){
-            lowest_backlog_length = new_backlog_length;
-            starting_coords->row = row;
-            starting_coords->col = col;
-          }
-        }
-      }
+  void CleanSquaresByBacklogLength(std::vector<grid::SquareMeta*>*squares_by_backlog_length[constants::kGridSize + 1]){
+    // Clean memory
+    for(short i{0}; i<=constants::kGridSize; ++i){
+      delete squares_by_backlog_length[i];    // Attention we dont use delete[] because the vector content 
     }
-    if(lowest_backlog_length == 10){
-      return nullptr;
-    }
-    return starting_coords;
+    delete[] squares_by_backlog_length;
   }
 
   // Function to handle the whole solving algorith
   void SolveSud0ku(game_metadata::Meta &meta){
-    if(!FillSquares(meta)){
+
+    // We will store square addresses based on the backlog_length (number of possible values)
+    // backlog_length | Addr1 | Addr2 |...
+    //       0        |  <NA> |  <NA> |
+    //       1        | 0x12  |       |
+    //       2        | 0x13  | 0x1F  |
+    //                  ...
+    //       9        | 0x44  |
+    std::vector<grid::SquareMeta*> **squares_by_backlog_length = new std::vector<grid::SquareMeta*>*[constants::kGridSize + 1];
+    for(short i{0}; i<=constants::kGridSize; ++i){
+      squares_by_backlog_length[i] = new std::vector<grid::SquareMeta*>;
+    }
+    if(!FillSquares(meta, squares_by_backlog_length)){
+      CleanSquaresByBacklogLength(squares_by_backlog_length);
       return;
     }
     
-    Coords* start_point = FindBestStartingPoint(meta);
-    if(!start_point){
-      printw("Either this sud0ku is already completed or we are doing something embarrassingly wrong, and if we are wrong, I am performing the harakiri because of my dishonor\n");
-      getch();
-    }
-
-    printw("Starting point is set to %d, %d", start_point->row, start_point->col);
-    getch();
-    // Debug
-    /*
-    for(int i{0}; i<3; ++i){
-      for(int j{0}; j<3; ++j){
-        if(meta.grid[i][j].short_type){
-          printw("%d", *reinterpret_cast<short*>(meta.grid[i][j].value));
-         getch(); 
-        }else{
-          for(short p{0}; p < reinterpret_cast<square::Square*>(meta.grid[i][j].value)->backlog_length; ++p){
-          
-            printw("%d ", reinterpret_cast<square::Square*>(meta.grid[i][j].value)->backlog_values[p]);
-          }
-          getch();
-        }
+    // Testing our structure works
+    for(short i{0}; i<=constants::kGridSize; ++i){
+      for(auto ptr : *squares_by_backlog_length[i]){
+        printw("%d ", reinterpret_cast<square::Square*>(ptr->value)->backlog_length);  
       }
     }
-    */  
+
+    if(!GenerateSolutionPath(meta, squares_by_backlog_length)){
+      CleanSquaresByBacklogLength(squares_by_backlog_length);
+      return;
+    }
+    
+    CleanSquaresByBacklogLength(squares_by_backlog_length);
+    squares_by_backlog_length = nullptr;
+    
   }
 
 
