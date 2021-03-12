@@ -10,7 +10,7 @@
 
 namespace game_logic{
 
-  // Search for a given short "look_for" inside a vector and returns the index which stores it (Might be good idea to refactor as generic func)
+  // Search for a given short "look_for" inside a vector and returns the index which stores it
   template <typename T> short FindIndexInSet(T &array, const short look_for){
     auto ptr = std::find(std::begin(array), std::end(array), look_for);
     if(ptr != std::end(array)){
@@ -20,7 +20,28 @@ namespace game_logic{
     }
   }
 
-  //Get the coords of the 9 neighboors within the box
+  bool AreBoxNeighbors(Coords current, Coords next){
+    short box_length {constants::kGridSize/constants::kGridSection};
+
+    while(current.row % box_length != 0){
+      --current.row;
+    }
+    while(current.col % box_length != 0){
+      --current.col;
+    }
+    while(next.row % box_length != 0){
+      --next.row;
+    }
+    while(next.col % box_length != 0){
+      --next.col;
+    }
+    if(current.row == next.row && current.col == next.col){
+      return true;
+    }
+    return false;
+  }
+
+  //Get the coords of the 9 neighbors within the box
   Coords* GetBoxCoords(short current_row, short current_col, short &box_neighbors_length){
     box_neighbors_length = pow(constants::kGridSize/constants::kGridSection, 2);
     Coords *box_neighbors {new Coords[box_neighbors_length] };
@@ -131,17 +152,72 @@ namespace game_logic{
     return true;
   }
 
-  // Define the order to test the possible values (stored in backlog_values)
+  // Define the order to test the possible values (stored in backlog_values) will follow the Breadth First Search algorithm
   bool GenerateSolutionPath(game_metadata::Meta &meta, std::vector<grid::SquareMeta*> *squares_by_backlog_length[constants::kGridSize + 1]){
     short num_squares = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
     meta.solution_path = new grid::SquareMeta*[num_squares];
     //short solution_path_index {0};
 
     for(short i{0}; i<=constants::kGridSize; ++i){
-      for(grid::SquareMeta* square_meta : *squares_by_backlog_length[i]){
-        short distance = std::distance(std::begin(*meta.grid), square_meta);
-        printw("%d ", distance);  
+      printw("Loading backlog_length %d\n", i);
+      
+      // We create a matrix that will store if two nodes are connected (same row/col/box) or not
+      short squares_in_graph = squares_by_backlog_length[i]->size();
+      printw("%d squares found\n", squares_in_graph);
+      if(squares_in_graph == 0){
+        continue;  
       }
+      short **link_table = new short*[squares_in_graph];
+      for(short m{0}; m<squares_in_graph; ++m){
+        link_table[m] = new short[squares_in_graph];
+      }
+
+      for(short i_node{0}; i_node < squares_by_backlog_length[i]->size() - 1; ++i_node){
+        short i_next_node {static_cast<short>(i_node+1)};
+        grid::SquareMeta *current_node = (*squares_by_backlog_length[i])[i_node];
+        short current_node_distance = std::distance(std::begin(*meta.grid), current_node);
+        short current_node_row = current_node_distance / constants::kGridSize;
+        short current_node_col = current_node_distance % constants::kGridSize;
+        //printw("current square: [%d %d]\n", current_node_row, current_node_col);
+
+        link_table[i_node][i_node] = 0;
+        for(;i_next_node < squares_by_backlog_length[i]->size(); ++i_next_node){
+          grid::SquareMeta *next_node = (*squares_by_backlog_length[i])[i_next_node];
+          short next_node_distance = std::distance(std::begin(*meta.grid), next_node);
+          short next_node_row = next_node_distance / constants::kGridSize;
+          short next_node_col = next_node_distance % constants::kGridSize;
+          //printw("next square: [%d %d]\n", next_node_row, next_node_col);  
+
+          if(current_node_row == next_node_row || current_node_col == next_node_col){
+            //printw("Neigh true setting position [%d %d]\n", i_node, i_next_node);
+            link_table[i_node][i_next_node] = 1;
+            link_table[i_next_node][i_node] = 1;
+          }else if(AreBoxNeighbors({current_node_row, current_node_col},{next_node_row, next_node_col})){
+            //printw("Neigh true setting position [%d %d]\n", i_node, i_next_node);
+            link_table[i_node][i_next_node] = 1;
+            link_table[i_next_node][i_node] = 1;
+          }else{
+            //printw("Neigh false setting position [%d %d]\n", i_node, i_next_node);
+            link_table[i_node][i_next_node] = 0;
+            link_table[i_next_node][i_node] = 0;
+          }
+        }
+      }
+
+      printw("DEBUG for backlog_length %d\n", i);
+      for(short m{0}; m < squares_by_backlog_length[i]->size();++m){
+        for(short n{0}; n < squares_by_backlog_length[i]->size();++n){
+          printw("%d ", link_table[m][n]);
+        }
+        printw("\n");
+      }
+      getch();
+
+      for(short m{0}; m<squares_in_graph; ++m){
+        delete[] link_table[m];
+      }
+      delete[] link_table;
+      link_table = nullptr;
     }
     getch();
 
@@ -171,24 +247,19 @@ namespace game_logic{
     for(short i{0}; i<=constants::kGridSize; ++i){
       squares_by_backlog_length[i] = new std::vector<grid::SquareMeta*>;
     }
+    // Create squares in empty spaces
     if(!FillSquares(meta, squares_by_backlog_length)){
       CleanSquaresByBacklogLength(squares_by_backlog_length);
       return;
     }
-    
-    /* Testing our structure works
-    for(short i{0}; i<=constants::kGridSize; ++i){
-      for(auto ptr : *squares_by_backlog_length[i]){
-        printw("%d ", reinterpret_cast<square::Square*>(ptr->value)->backlog_length);  
-      }
-    }
-    */
-
+    // Define the order in which values will be tested
     if(!GenerateSolutionPath(meta, squares_by_backlog_length)){
       CleanSquaresByBacklogLength(squares_by_backlog_length);
       return;
     }
     
+    // Start solving! ()
+
     CleanSquaresByBacklogLength(squares_by_backlog_length);
     squares_by_backlog_length = nullptr;
     
