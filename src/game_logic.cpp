@@ -152,6 +152,60 @@ namespace game_logic{
     return true;
   }
 
+  // Detect if two given nodes are linked (by row/col/box) and populate our link_table
+  void PopulateLinkTable(short** link_table, const short i_node, const short current_node_distance, const short i_next_node, const short next_node_distance){
+    
+    short current_node_row = current_node_distance / constants::kGridSize;
+    short current_node_col = current_node_distance % constants::kGridSize;
+
+    short next_node_row = next_node_distance / constants::kGridSize;
+    short next_node_col = next_node_distance % constants::kGridSize;
+          
+    // Our matrix is mirrorred so we can actually write on the x and y axis at the same time
+    if(current_node_row == next_node_row || current_node_col == next_node_col){
+      link_table[i_node][i_next_node] = 1;
+      link_table[i_next_node][i_node] = 1;
+    }else if(AreBoxNeighbors({current_node_row, current_node_col},{next_node_row, next_node_col})){
+      link_table[i_node][i_next_node] = 1;
+      link_table[i_next_node][i_node] = 1;
+    }else{
+      link_table[i_node][i_next_node] = 0;
+      link_table[i_next_node][i_node] = 0;
+    }
+  }
+
+  // We count the number of links and add it to our link_table on the metadata_col
+  void AddTotalLinksToLinkTable(short **link_table, const short data_length, const short metadata_col){
+    for(short i{0}; i < data_length; ++i){
+      short total_links {0};
+      for(short j{0}; j < data_length; ++j){
+        if(link_table[i][j]){
+          ++total_links;
+        }
+      }
+      link_table[i][metadata_col] = total_links;
+    }
+  }
+
+  // Order our link table by the total_links desc
+  void OrderLinkTableByTotalLinks(short **link_table, const short data_length, const short metadata_col){
+    // Read all rows except last
+    for(short i{0}; i < data_length-1; ++i){
+      short j{static_cast<short>(i+1)};
+      short max_total = link_table[i][metadata_col];
+      short max_i = i;
+      
+      // Compare to all remaining rows
+      for(; j < data_length; ++j){
+        if(max_total < link_table[j][metadata_col]){
+          max_total = link_table[j][metadata_col];
+          max_i = j;
+        }
+      }
+      std::swap(link_table[i], link_table[max_i]);
+    }
+  }
+
   // Define the order to test the possible values (stored in backlog_values) will follow the Breadth First Search algorithm
   bool GenerateSolutionPath(game_metadata::Meta &meta, std::vector<grid::SquareMeta*> *squares_by_backlog_length[constants::kGridSize + 1]){
     short num_squares = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
@@ -165,62 +219,49 @@ namespace game_logic{
       if(squares_in_graph == 0){
         continue;  
       }
+
       short **link_table = new short*[squares_in_graph];
       for(short m{0}; m<squares_in_graph; ++m){
-        link_table[m] = new short[squares_in_graph];
+        // We will add two extra columns to store the node position (in squares_by_backlog_length) and the number of links each node has
+        link_table[m] = new short[squares_in_graph + 2];
       }
 
-      for(short i_node{0}; i_node < squares_by_backlog_length[i]->size() - 1; ++i_node){
+      for(short i_node{0}; i_node < squares_in_graph - 1; ++i_node){
         short i_next_node {static_cast<short>(i_node+1)};
         grid::SquareMeta *current_node = (*squares_by_backlog_length[i])[i_node];
-        short current_node_distance = std::distance(std::begin(*meta.grid), current_node);
-        short current_node_row = current_node_distance / constants::kGridSize;
-        short current_node_col = current_node_distance % constants::kGridSize;
 
+        short current_node_distance = std::distance(std::begin(*meta.grid), current_node);
+
+        // The "squares_in_graph" column of all rows will be the number of the row (which is a position in our squares_by_backlog_length[i])
+        link_table[i_node][squares_in_graph] = i_node;
+        link_table[i_next_node][squares_in_graph] = i_next_node;
         link_table[i_node][i_node] = 0;
-        for(;i_next_node < squares_by_backlog_length[i]->size(); ++i_next_node){
+
+        for(;i_next_node < squares_in_graph; ++i_next_node){
           grid::SquareMeta *next_node = (*squares_by_backlog_length[i])[i_next_node];
           short next_node_distance = std::distance(std::begin(*meta.grid), next_node);
-          short next_node_row = next_node_distance / constants::kGridSize;
-          short next_node_col = next_node_distance % constants::kGridSize;
-          
-          // Our matrix is mirrorred so we can actually write on the x and y axis at the same time
-          if(current_node_row == next_node_row || current_node_col == next_node_col){
-            link_table[i_node][i_next_node] = 1;
-            link_table[i_next_node][i_node] = 1;
-          }else if(AreBoxNeighbors({current_node_row, current_node_col},{next_node_row, next_node_col})){
-            link_table[i_node][i_next_node] = 1;
-            link_table[i_next_node][i_node] = 1;
-          }else{
-            link_table[i_node][i_next_node] = 0;
-            link_table[i_next_node][i_node] = 0;
-          }
+
+          PopulateLinkTable(link_table, i_node, current_node_distance, i_next_node, next_node_distance);
         }
       }
 
-      // Little trick on our link_table, positions[0][0], [1][1] etc are zero (empty) because none of our nodes connects 
-      // to itself, so we'll reuse that space to store the total number of links to that node 
-      for(short m{0}; m < squares_by_backlog_length[i]->size();++m){
-        short total_links {0};
-        for(short n{0}; n < squares_by_backlog_length[i]->size();++n){
-          if(link_table[m][n]){
-            ++total_links;
-          }
-        }
-        link_table[m][m] = total_links;
-      }
+      // We use the second of our two extra columns to store the total amount of 
+      // links that the node has to it's peers
+      AddTotalLinksToLinkTable(link_table, squares_in_graph, squares_in_graph +1);
+
+      // Order link_table from most links to less
+      OrderLinkTableByTotalLinks(link_table, squares_in_graph, squares_in_graph +1); 
 
       // Start with the node with less backlog_length but more neighbors
-      //PushSolutionPath(meta.solution_path, squares_by_backlog_length[i][node_i_more_links]); 
+      //PushSolutionPath(meta.solution_path, solution_path_index); 
 
       printw("DEBUG for backlog_length %d\n", i);
-      for(short m{0}; m < squares_by_backlog_length[i]->size();++m){
-        for(short n{0}; n < squares_by_backlog_length[i]->size();++n){
+      for(short m{0}; m < squares_in_graph; ++m){
+        for(short n{0}; n < squares_in_graph + 2; ++n){
           printw("%d ", link_table[m][n]);
         }
         printw("\n");
       }
-      getch();
       getch();
 
 
