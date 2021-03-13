@@ -159,11 +159,9 @@ namespace game_logic{
     //short solution_path_index {0};
 
     for(short i{0}; i<=constants::kGridSize; ++i){
-      printw("Loading backlog_length %d\n", i);
       
       // We create a matrix that will store if two nodes are connected (same row/col/box) or not
       short squares_in_graph = squares_by_backlog_length[i]->size();
-      printw("%d squares found\n", squares_in_graph);
       if(squares_in_graph == 0){
         continue;  
       }
@@ -178,7 +176,6 @@ namespace game_logic{
         short current_node_distance = std::distance(std::begin(*meta.grid), current_node);
         short current_node_row = current_node_distance / constants::kGridSize;
         short current_node_col = current_node_distance % constants::kGridSize;
-        //printw("current square: [%d %d]\n", current_node_row, current_node_col);
 
         link_table[i_node][i_node] = 0;
         for(;i_next_node < squares_by_backlog_length[i]->size(); ++i_next_node){
@@ -186,23 +183,35 @@ namespace game_logic{
           short next_node_distance = std::distance(std::begin(*meta.grid), next_node);
           short next_node_row = next_node_distance / constants::kGridSize;
           short next_node_col = next_node_distance % constants::kGridSize;
-          //printw("next square: [%d %d]\n", next_node_row, next_node_col);  
-
+          
+          // Our matrix is mirrorred so we can actually write on the x and y axis at the same time
           if(current_node_row == next_node_row || current_node_col == next_node_col){
-            //printw("Neigh true setting position [%d %d]\n", i_node, i_next_node);
             link_table[i_node][i_next_node] = 1;
             link_table[i_next_node][i_node] = 1;
           }else if(AreBoxNeighbors({current_node_row, current_node_col},{next_node_row, next_node_col})){
-            //printw("Neigh true setting position [%d %d]\n", i_node, i_next_node);
             link_table[i_node][i_next_node] = 1;
             link_table[i_next_node][i_node] = 1;
           }else{
-            //printw("Neigh false setting position [%d %d]\n", i_node, i_next_node);
             link_table[i_node][i_next_node] = 0;
             link_table[i_next_node][i_node] = 0;
           }
         }
       }
+
+      // Little trick on our link_table, positions[0][0], [1][1] etc are zero (empty) because none of our nodes connects 
+      // to itself, so we'll reuse that space to store the total number of links to that node 
+      for(short m{0}; m < squares_by_backlog_length[i]->size();++m){
+        short total_links {0};
+        for(short n{0}; n < squares_by_backlog_length[i]->size();++n){
+          if(link_table[m][n]){
+            ++total_links;
+          }
+        }
+        link_table[m][m] = total_links;
+      }
+
+      // Start with the node with less backlog_length but more neighbors
+      //PushSolutionPath(meta.solution_path, squares_by_backlog_length[i][node_i_more_links]); 
 
       printw("DEBUG for backlog_length %d\n", i);
       for(short m{0}; m < squares_by_backlog_length[i]->size();++m){
@@ -212,6 +221,9 @@ namespace game_logic{
         printw("\n");
       }
       getch();
+      getch();
+
+
 
       for(short m{0}; m<squares_in_graph; ++m){
         delete[] link_table[m];
