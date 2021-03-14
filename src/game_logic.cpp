@@ -187,7 +187,8 @@ namespace game_logic{
     }
   }
 
-  // Order our link table by the total_links desc
+  // Order our link table by the total_links desc (i know, swapping so much is not performant friendly, 
+  // but handling dynamic arrays our sort functions don't work)
   void OrderLinkTableByTotalLinks(short **link_table, const short data_length, const short metadata_col){
     // Read all rows except last
     for(short i{0}; i < data_length-1; ++i){
@@ -202,7 +203,44 @@ namespace game_logic{
           max_i = j;
         }
       }
-      std::swap(link_table[i], link_table[max_i]);
+      if(max_i != i){
+        std::swap(link_table[i], link_table[max_i]);
+      }
+    }
+  }
+
+  void VerifyNewSolutionPathEntry(grid::SquareMeta **solution_path, grid::SquareMeta *new_entry, const short number_nodes_by_backlog_length){
+    static short solution_path_index{0};
+    // We will check the last n positions (where n is the number of nodes with a certain backlog_length)
+    short last_relevant_index {static_cast<short>(solution_path_index - number_nodes_by_backlog_length)};
+    // Lets keep our boundaries :)
+    if(last_relevant_index < 0){
+      last_relevant_index = 0;
+    } 
+    
+    bool found = false;
+    for(short i{solution_path_index}; i >= last_relevant_index; --i){
+      if(solution_path[i] == new_entry){
+        found = true;
+      }
+    }
+    if(!found){
+      solution_path[solution_path_index] = new_entry;
+      ++solution_path_index; 
+    }
+  }
+
+  // Based on the link table we start pushing the order of the nodes in our solution path
+  void DefineSolutionPath(grid::SquareMeta **solution_path, std::vector<grid::SquareMeta*> *squares_by_backlog_length, short **link_table, const short metadata_col){
+    // Start by try adding the nodes ordered by most links
+    for(short i{0}; i<squares_by_backlog_length->size(); ++i){
+      VerifyNewSolutionPathEntry(solution_path, (*squares_by_backlog_length)[link_table[i][metadata_col]], squares_by_backlog_length->size());
+      // Try adding all the nodes linked to the node selected
+      for(short j{0}; j<squares_by_backlog_length->size(); ++j){
+        if(link_table[i][j]){
+          VerifyNewSolutionPathEntry(solution_path, (*squares_by_backlog_length)[j], squares_by_backlog_length->size());
+        }
+      }
     }
   }
 
@@ -252,8 +290,8 @@ namespace game_logic{
       // Order link_table from most links to less
       OrderLinkTableByTotalLinks(link_table, squares_in_graph, squares_in_graph +1); 
 
-      // Start with the node with less backlog_length but more neighbors
-      //PushSolutionPath(meta.solution_path, solution_path_index); 
+      // Start tracing the route to try values
+      DefineSolutionPath(meta.solution_path, squares_by_backlog_length[i], link_table, squares_in_graph +1); 
 
       printw("DEBUG for backlog_length %d\n", i);
       for(short m{0}; m < squares_in_graph; ++m){
