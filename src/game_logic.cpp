@@ -293,27 +293,14 @@ namespace game_logic{
       // Start tracing the route to try values
       DefineSolutionPath(meta.solution_path, squares_by_backlog_length[i], link_table, squares_in_graph +1); 
 
-      printw("DEBUG for backlog_length %d\n", i);
-      for(short m{0}; m < squares_in_graph; ++m){
-        for(short n{0}; n < squares_in_graph + 2; ++n){
-          printw("%d ", link_table[m][n]);
-        }
-        printw("\n");
-      }
-      getch();
-
-
-
       for(short m{0}; m<squares_in_graph; ++m){
         delete[] link_table[m];
       }
       delete[] link_table;
       link_table = nullptr;
     }
-    getch();
 
-
-    return false;
+    return true;
   }
 
   void CleanSquaresByBacklogLength(std::vector<grid::SquareMeta*>*squares_by_backlog_length[constants::kGridSize + 1]){
@@ -322,6 +309,18 @@ namespace game_logic{
       delete squares_by_backlog_length[i];    // Attention we dont use delete[] because the vector content 
     }
     delete[] squares_by_backlog_length;
+  }
+
+  // Solve the sud0ku
+  void FollowWhiteRabbit(game_metadata::Meta &meta){
+    short solution_path_length = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
+    for(short i{0}; i < solution_path_length; ++i){
+      //reinterpret_cast<square::Square>(*(meta.solution_path[i])->value);
+      short node_distance = std::distance(std::begin(*meta.grid), meta.solution_path[i]); 
+
+      printw("[%d %d]->", node_distance / constants::kGridSize, node_distance % constants::kGridSize);
+    }
+    getch();
   }
 
   // Function to handle the whole solving algorith
@@ -348,8 +347,9 @@ namespace game_logic{
       CleanSquaresByBacklogLength(squares_by_backlog_length);
       return;
     }
-    
-    // Start solving! ()
+   
+    // Start solving! 
+    FollowWhiteRabbit(meta); 
 
     CleanSquaresByBacklogLength(squares_by_backlog_length);
     squares_by_backlog_length = nullptr;
