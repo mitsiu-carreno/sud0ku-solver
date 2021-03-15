@@ -11,10 +11,10 @@
 namespace game_logic{
 
   // Search for a given short "look_for" inside a vector and returns the index which stores it
-  template <typename T> short FindIndexInSet(T &array, const short look_for){
-    auto ptr = std::find(std::begin(array), std::end(array), look_for);
-    if(ptr != std::end(array)){
-      return std::distance(std::begin(array), ptr);
+  template <typename T> short FindIndexInSet(T begin, T end, const short look_for){
+    auto ptr = std::find(begin, end, look_for);
+    if(ptr != end){
+      return std::distance(begin, ptr);
     }else{
       return -1;
     }
@@ -77,10 +77,10 @@ namespace game_logic{
       // Returns 0 if empty
       short row_value = grid::GetGridValue(grid, g_row, i); 
       short col_value = grid::GetGridValue(grid, i, g_col);
-      if(row_value && FindIndexInSet(taken_values, row_value) == -1){
+      if(row_value && FindIndexInSet(std::begin(taken_values), std::end(taken_values), row_value) == -1){
         taken_values.push_back(row_value);
       }
-      if(col_value && FindIndexInSet(taken_values, col_value) == -1){
+      if(col_value && FindIndexInSet(std::begin(taken_values), std::end(taken_values), col_value) == -1){
         taken_values.push_back(col_value);
       }
     }
@@ -96,7 +96,7 @@ namespace game_logic{
 
     for(short box_neighbors_index{0}; box_neighbors_index < box_neighbors_length; ++box_neighbors_index){
       short box_neighbors_value = grid::GetGridValue(grid, box_neighbors[box_neighbors_index].row, box_neighbors[box_neighbors_index].col);
-      if(box_neighbors_value && FindIndexInSet(taken_values, box_neighbors_value) == -1){
+      if(box_neighbors_value && FindIndexInSet(std::begin(taken_values), std::end(taken_values), box_neighbors_value) == -1){
         taken_values.push_back(box_neighbors_value);
       } 
     }
@@ -105,7 +105,7 @@ namespace game_logic{
 
     short *backlog_values = new short[tmp_backlog_length];
     for(short i{1}, backlog_index{0}; i<=constants::kGridSize; ++i){
-      if(FindIndexInSet(taken_values, i) == -1){
+      if(FindIndexInSet(std::begin(taken_values), std::end(taken_values), i) == -1){
         backlog_values[backlog_index] = i;
         ++backlog_index;
       }
@@ -293,22 +293,6 @@ namespace game_logic{
       // Order link_table from most links to less
       OrderLinkTableByTotalLinks(link_table, squares_in_graph, col_total_links); 
 
-      /*
-      printw("length %d\n", i);
-      for(short i{0}; i<squares_in_graph; ++i){
-        for(short j{0}; j<squares_in_graph +2; ++j){
-          printw("%d ", link_table[i][j]);
-        }
-        printw("\n");
-      }
-      printw("coords:\n");
-      for(auto e : *squares_by_backlog_length[i]){
-        short distance = std::distance(std::begin(*meta.grid), e);
-        printw("[%d %d], ", distance/constants::kGridSize, distance%constants::kGridSize);
-      }
-      getch();
-      */
-
       // Start tracing the route to try values
       DefineSolutionPath(meta.solution_path, squares_by_backlog_length[i], link_table, col_node_number); 
 
@@ -333,13 +317,27 @@ namespace game_logic{
   // Solve the sud0ku
   void FollowWhiteRabbit(game_metadata::Meta &meta){
     short solution_path_length = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
-    for(short i{0}; i < solution_path_length; ++i){
-      //reinterpret_cast<square::Square>(*(meta.solution_path[i])->value);
-      short node_distance = std::distance(std::begin(*meta.grid), meta.solution_path[i]); 
+    static short solution_path_index {0};
 
-      printw("[%d %d]->", node_distance / constants::kGridSize, node_distance % constants::kGridSize);
+    while(solution_path_index != solution_path_length -1){
+    
+      short current_value = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value;
+      short *begin = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_values;
+      short backlog_length = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_length;
+      short current_value_index = FindIndexInSet(begin, begin + backlog_length, current_value);
+      // If we tryed all possible values, step back
+      if(current_value_index == backlog_length -1 ){
+        reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value = 0;
+        --solution_path_index;
+      }else{
+        //step forward on the backlog_values array
+        reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_values[current_value_index +1];
+        ++solution_path_index;
+      }
+      grid::PrintGrid(meta.grid, false);
+      getch();
+      clear();
     }
-    getch();
   }
 
   // Function to handle the whole solving algorith
@@ -357,20 +355,20 @@ namespace game_logic{
       squares_by_backlog_length[i] = new std::vector<grid::SquareMeta*>;
     }
     // Create squares in empty spaces
-    if(!FillSquares(meta, squares_by_backlog_length)){
-      CleanSquaresByBacklogLength(squares_by_backlog_length);
+    if(!game_logic::FillSquares(meta, squares_by_backlog_length)){
+      game_logic::CleanSquaresByBacklogLength(squares_by_backlog_length);
       return;
     }
     // Define the order in which values will be tested
-    if(!GenerateSolutionPath(meta, squares_by_backlog_length)){
-      CleanSquaresByBacklogLength(squares_by_backlog_length);
+    if(!game_logic::GenerateSolutionPath(meta, squares_by_backlog_length)){
+      game_logic::CleanSquaresByBacklogLength(squares_by_backlog_length);
       return;
     }
    
     // Start solving! 
-    FollowWhiteRabbit(meta); 
+    game_logic::FollowWhiteRabbit(meta); 
 
-    CleanSquaresByBacklogLength(squares_by_backlog_length);
+    game_logic::CleanSquaresByBacklogLength(squares_by_backlog_length);
     squares_by_backlog_length = nullptr;
     
   }
