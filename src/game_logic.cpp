@@ -254,6 +254,9 @@ namespace game_logic{
       
       // We create a matrix that will store if two nodes are connected (same row/col/box) or not
       short squares_in_graph = squares_by_backlog_length[i]->size();
+      // Metadata columns
+      short col_node_number = squares_in_graph;
+      short col_total_links = squares_in_graph +1;
       if(squares_in_graph == 0){
         continue;  
       }
@@ -285,13 +288,29 @@ namespace game_logic{
 
       // We use the second of our two extra columns to store the total amount of 
       // links that the node has to it's peers
-      AddTotalLinksToLinkTable(link_table, squares_in_graph, squares_in_graph +1);
+      AddTotalLinksToLinkTable(link_table, squares_in_graph, col_total_links);
 
       // Order link_table from most links to less
-      OrderLinkTableByTotalLinks(link_table, squares_in_graph, squares_in_graph +1); 
+      OrderLinkTableByTotalLinks(link_table, squares_in_graph, col_total_links); 
+
+      /*
+      printw("length %d\n", i);
+      for(short i{0}; i<squares_in_graph; ++i){
+        for(short j{0}; j<squares_in_graph +2; ++j){
+          printw("%d ", link_table[i][j]);
+        }
+        printw("\n");
+      }
+      printw("coords:\n");
+      for(auto e : *squares_by_backlog_length[i]){
+        short distance = std::distance(std::begin(*meta.grid), e);
+        printw("[%d %d], ", distance/constants::kGridSize, distance%constants::kGridSize);
+      }
+      getch();
+      */
 
       // Start tracing the route to try values
-      DefineSolutionPath(meta.solution_path, squares_by_backlog_length[i], link_table, squares_in_graph +1); 
+      DefineSolutionPath(meta.solution_path, squares_by_backlog_length[i], link_table, col_node_number); 
 
       for(short m{0}; m<squares_in_graph; ++m){
         delete[] link_table[m];
