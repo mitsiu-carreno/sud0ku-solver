@@ -20,6 +20,35 @@ namespace game_logic{
     }
   }
 
+  bool ValidNumber(const grid::grid_t grid, short row, short col, short look_for){
+    // Get values from row and col
+    for(short i{0}; i< constants::kGridSize; ++i){
+      short row_value = grid::GetGridValue(grid, row, i);
+      short col_value = grid::GetGridValue(grid, i, col);
+      if(row_value == look_for || col_value == look_for){
+        return false;
+      }
+    }
+
+    // Get values from same box
+    short box_neighbors_length = 0;
+    game_logic::Coords *box_neighbors = GetBoxCoords(row, col, box_neighbors_length);
+    if(!box_neighbors){
+      printw("Oh snap, I crashed! I'am dying, tell MrNull he's a horrible programmer x_x\n");
+      getch();
+      return false;
+    }
+    
+    for(short box_neighbors_index{0}; box_neighbors_index < box_neighbors_length; ++box_neighbors_index){
+      short box_neighbors_value = grid::GetGridValue(grid, box_neighbors[box_neighbors_index].row, box_neighbors[box_neighbors_index].col);
+      if(box_neighbors_value == look_for){
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   bool AreBoxNeighbors(Coords current, Coords next){
     short box_length {constants::kGridSize/constants::kGridSection};
 
@@ -317,26 +346,38 @@ namespace game_logic{
   // Solve the sud0ku
   void FollowWhiteRabbit(game_metadata::Meta &meta){
     short solution_path_length = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
-    static short solution_path_index {0};
+    short solution_path_index {0};
 
-    while(solution_path_index != solution_path_length -1){
+    while(solution_path_index < solution_path_length ){
     
       short current_value = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value;
       short *begin = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_values;
       short backlog_length = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_length;
       short current_value_index = FindIndexInSet(begin, begin + backlog_length, current_value);
-      // If we tryed all possible values, step back
-      if(current_value_index == backlog_length -1 ){
+      short  next_value_index = current_value_index +1;
+
+      while(next_value_index < backlog_length){
+        short node_distance = std::distance(std::begin(*meta.grid), meta.solution_path[solution_path_index]);
+        short node_row = node_distance / constants::kGridSize;
+        short node_col = node_distance % constants::kGridSize;
+        if(ValidNumber(meta.grid, node_row, node_col, reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_values[next_value_index])){
+              
+          reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_values[next_value_index];
+          ++solution_path_index;
+          break;
+        }
+        ++next_value_index;
+      }
+
+      // If we tried all our possible values, step back
+      if(next_value_index == backlog_length){
         reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value = 0;
         --solution_path_index;
-      }else{
-        //step forward on the backlog_values array
-        reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_values[current_value_index +1];
-        ++solution_path_index;
       }
-      grid::PrintGrid(meta.grid, false);
-      getch();
-      clear();
+        
+      //grid::PrintGrid(meta.grid, false);
+      //getch();
+      //clear();
     }
   }
 
@@ -368,18 +409,12 @@ namespace game_logic{
     // Start solving! 
     game_logic::FollowWhiteRabbit(meta); 
 
+    clear();
+    grid::PrintGrid(meta.grid, false);
+    getch();
+
     game_logic::CleanSquaresByBacklogLength(squares_by_backlog_length);
     squares_by_backlog_length = nullptr;
     
   }
-
-
-
-  /////////// Backlog
-  game_logic::NumDuplicateError CheckNumber(const grid::grid_t grid, short row, short col, short number){
-    //FindNumRow(grid, row, col, number);
-    //CheckCol();
-    //CheckBox();  
-    return game_logic::NumDuplicateError::kOk;
-  } 
 }
