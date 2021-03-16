@@ -38,8 +38,8 @@ HEADER_DIRECTORY_LIST	:= $(shell find include \( -name '*.hpp' -o -name '*.h' \)
 # Prefix -I to all directories containing .hpp and .h files
 INCLUDE_LIST 	:= $(patsubst include%,-I include%,$(HEADER_DIRECTORY_LIST))
 
-
-CFLAGS=-c -std=c++1z -Wall -Werror -g
+#ggdb3 helps analyse with valgrind
+CFLAGS=-c -std=c++1z -Wall -Werror -g -ggdb3
 
 $(EXEC_TARGET): $(O_FILE_FULL_PATH_LIST)
 	@mkdir -p $(EXEC_TARGET)

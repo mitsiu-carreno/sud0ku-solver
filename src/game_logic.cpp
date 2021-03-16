@@ -22,12 +22,13 @@ namespace game_logic{
   }
 
   bool ValidNumber(const grid::grid_t grid, short row, short col, short look_for){
+    bool result = true;
     // Get values from row and col
     for(short i{0}; i< constants::kGridSize; ++i){
       short row_value = grid::GetGridValue(grid, row, i);
       short col_value = grid::GetGridValue(grid, i, col);
       if(row_value == look_for || col_value == look_for){
-        return false;
+        result = false;
       }
     }
 
@@ -37,20 +38,20 @@ namespace game_logic{
     if(!box_neighbors){
       printw("Oh snap, I crashed! I'am dying, tell MrNull he's a horrible programmer x_x\n");
       getch();
-      return false;
+      result = false;
     }
     
     for(short box_neighbors_index{0}; box_neighbors_index < box_neighbors_length; ++box_neighbors_index){
       short box_neighbors_value = grid::GetGridValue(grid, box_neighbors[box_neighbors_index].row, box_neighbors[box_neighbors_index].col);
       if(box_neighbors_value == look_for){
-        return false;
+        result = false;
       }
     }
 
     delete box_neighbors;
     box_neighbors = nullptr;
 
-    return true;
+    return result;
   }
 
   bool AreBoxNeighbors(Coords current, Coords next){
@@ -169,13 +170,13 @@ namespace game_logic{
             
             // Check that everything is stored correctly
             if(!meta.grid[g_row][g_col].value){
-              printw("An error ocurred while pointing our new square at position [%d, %d], we will punish the programmer with punishment #2252");
+              printw("An error ocurred while pointing our new square at position [%d, %d], we will punish the programmer with punishment #2252", g_row, g_col);
               getch();
               return false;
             }
 
             if(!reinterpret_cast<square::Square*>(meta.grid[g_row][g_col].value)->backlog_values){
-              printw("An error ocurred while storing the posible values at square [%d, %d], we will punish the programmer with punishment #5528");
+              printw("An error ocurred while storing the posible values at square [%d, %d], we will punish the programmer with punishment #5528", g_row, g_col);
               getch();
               return false;
             }

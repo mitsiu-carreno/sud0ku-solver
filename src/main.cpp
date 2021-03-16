@@ -25,10 +25,12 @@ int main(){
         delete reinterpret_cast<short*>(meta.grid[i][j].value);
       }else{
         delete[] reinterpret_cast<square::Square*>(meta.grid[i][j].value)->backlog_values; 
+        delete reinterpret_cast<square::Square*>(meta.grid[i][j].value);
       }
       //delete meta.grid[i][j];
     }
   }
+  delete meta.solution_path;
   meta.solution_path = nullptr;
   
   //for(short i{0}; i< constants::kGridSize; ++i){
