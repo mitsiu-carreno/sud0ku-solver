@@ -5,13 +5,6 @@
 #include "game_metadata.hpp"
 
 namespace game_logic{
-  enum class NumDuplicateError{
-    kOk = 0,
-    kRow,
-    kCol,
-    kBox,
-  };
-
   struct Coords{
     short row;
     short col;

@@ -46,6 +46,9 @@ namespace game_logic{
       }
     }
 
+    delete box_neighbors;
+    box_neighbors = nullptr;
+
     return true;
   }
 
@@ -73,7 +76,12 @@ namespace game_logic{
   //Get the coords of the 9 neighbors within the box
   Coords* GetBoxCoords(short current_row, short current_col, short &box_neighbors_length){
     box_neighbors_length = pow(constants::kGridSize/constants::kGridSection, 2);
-    Coords *box_neighbors {new Coords[box_neighbors_length] };
+    Coords *box_neighbors {new (std::nothrow) Coords[box_neighbors_length] };
+    if(!box_neighbors){
+      printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
+      getch();
+      return nullptr;
+    }
 
     short box_length {constants::kGridSize/constants::kGridSection};
 
@@ -130,9 +138,12 @@ namespace game_logic{
       } 
     }
 
+    delete box_neighbors;
+    box_neighbors = nullptr;
+
     tmp_backlog_length = constants::kGridSize - taken_values.size();
 
-    short *backlog_values = new short[tmp_backlog_length];
+    short *backlog_values = new (std::nothrow) short[tmp_backlog_length];
     for(short i{1}, backlog_index{0}; i<=constants::kGridSize; ++i){
       if(FindIndexInSet(std::begin(taken_values), std::end(taken_values), i) == -1){
         backlog_values[backlog_index] = i;
@@ -153,7 +164,7 @@ namespace game_logic{
           short *backlog_ptr = GetAvailableValues(g_row, g_col, meta.grid, backlog_length);
           if(backlog_ptr){
             // We create a new square object inside our grid and it's value will point to a new square::Square just created
-            meta.grid[g_row][g_col] = {grid::SquareMeta{false, reinterpret_cast<void*>(new square::Square {0, backlog_length, backlog_ptr})}};
+            meta.grid[g_row][g_col] = {grid::SquareMeta{false, reinterpret_cast<void*>(new (std::nothrow) square::Square {0, backlog_length, backlog_ptr})}};
             
             // Check that everything is stored correctly
             if(!meta.grid[g_row][g_col].value){
@@ -276,8 +287,12 @@ namespace game_logic{
   // Define the order to test the possible values (stored in backlog_values) will follow the Breadth First Search algorithm
   bool GenerateSolutionPath(game_metadata::Meta &meta, std::vector<grid::SquareMeta*> *squares_by_backlog_length[constants::kGridSize + 1]){
     short num_squares = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
-    meta.solution_path = new grid::SquareMeta*[num_squares];
-    //short solution_path_index {0};
+    meta.solution_path = new (std::nothrow) grid::SquareMeta*[num_squares];
+    if(!meta.solution_path){
+      printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
+      getch();
+      return false;
+    }
 
     for(short i{0}; i<=constants::kGridSize; ++i){
       
@@ -290,10 +305,27 @@ namespace game_logic{
         continue;  
       }
 
-      short **link_table = new short*[squares_in_graph];
+      short **link_table = new (std::nothrow) short*[squares_in_graph];
+      if(!link_table){
+        printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
+        getch();
+        return false;
+      }
+
       for(short m{0}; m<squares_in_graph; ++m){
         // We will add two extra columns to store the node position (in squares_by_backlog_length) and the number of links each node has
-        link_table[m] = new short[squares_in_graph + 2];
+        link_table[m] = new (std::nothrow) short[squares_in_graph + 2];
+        if(!link_table[m]){
+          --m;
+          for(; m>=0;--m){
+            delete[] link_table[m];
+          }
+          delete[] link_table;
+
+          printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
+          getch();
+          return false;
+        } 
       }
 
       for(short i_node{0}; i_node < squares_in_graph - 1; ++i_node){
@@ -338,7 +370,7 @@ namespace game_logic{
   void CleanSquaresByBacklogLength(std::vector<grid::SquareMeta*>*squares_by_backlog_length[constants::kGridSize + 1]){
     // Clean memory
     for(short i{0}; i<=constants::kGridSize; ++i){
-      delete squares_by_backlog_length[i];    // Attention we dont use delete[] because the vector content 
+      delete squares_by_backlog_length[i];    // Attention we dont use delete[] because the vector content is usefull
     }
     delete[] squares_by_backlog_length;
   }
@@ -391,9 +423,26 @@ namespace game_logic{
     //       2        | 0x13  | 0x1F  |
     //                  ...
     //       9        | 0x44  |
-    std::vector<grid::SquareMeta*> **squares_by_backlog_length = new std::vector<grid::SquareMeta*>*[constants::kGridSize + 1];
+    std::vector<grid::SquareMeta*> **squares_by_backlog_length = new (std::nothrow) std::vector<grid::SquareMeta*>*[constants::kGridSize + 1];
+    if(!squares_by_backlog_length){
+      printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
+      getch();
+      return;
+    }
+
     for(short i{0}; i<=constants::kGridSize; ++i){
-      squares_by_backlog_length[i] = new std::vector<grid::SquareMeta*>;
+      squares_by_backlog_length[i] = new (std::nothrow) std::vector<grid::SquareMeta*>;
+      if(!squares_by_backlog_length[i]){
+        --i;
+        for(; i<=0; --i){
+          delete squares_by_backlog_length[i];  // Attention we dont use delete[] because the vector content is usefull
+        }
+        delete[] squares_by_backlog_length;
+
+        printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
+        getch();
+        return;
+      }
     }
     // Create squares in empty spaces
     if(!game_logic::FillSquares(meta, squares_by_backlog_length)){

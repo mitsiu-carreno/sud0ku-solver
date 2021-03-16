@@ -54,7 +54,13 @@ namespace hint{
       return nullptr;
     }
     
-    NewHint *new_hint {new NewHint};
+    NewHint *new_hint {new (std::nothrow) NewHint};
+    if(!new_hint){
+      printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
+      getch();
+      return nullptr;
+    }
+
     new_hint->x = static_cast<short>(input[1] - kAsciiNumberStart); 
     new_hint->y = static_cast<short>(input[0] - kAsciiLetterStart);
     new_hint->value = static_cast<short>(swap_third_position ? 
@@ -134,7 +140,7 @@ namespace hint{
       // Search in grid based on temp_hints coords if value found, ignore 
       if(!grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x].value){
         // Here's the tricky part, grid is an array of SquareMeta's (no pointers) but each SquareMeta has a void pointer in this case we are pointing to shots
-        grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x] = grid::SquareMeta {true, reinterpret_cast<void*>(new short{temp_hints[temp_hints_index].value})};
+        grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x] = grid::SquareMeta {true, reinterpret_cast<void*>(new (std::nothrow) short{temp_hints[temp_hints_index].value})};
         
         // Now lets check that everything is stored correctly
         // grid[y][x] must exists, and value prop should point somewhere
@@ -195,11 +201,13 @@ namespace hint{
             // Add hint to our temp array (for display purposes)
             temp_hints.push_back({new_hint->x, new_hint->y, new_hint->value});
           }
+          //proper handling of our pointer :)
+          delete new_hint;
+          new_hint = nullptr;
+        }else{
+          return false;
         }
 
-        //proper handling of our pointer :)
-        delete new_hint;
-        new_hint = nullptr;
       }
       refresh();
     }
