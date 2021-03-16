@@ -6,6 +6,7 @@
 #include "square.hpp"
 #include <math.h>   // pow
 #include <vector>
+#include <algorithm>  // std::find
 #include <ncurses.h>
 
 namespace game_logic{
@@ -273,10 +274,10 @@ namespace game_logic{
   // Based on the link table we start pushing the order of the nodes in our solution path
   void DefineSolutionPath(grid::SquareMeta **solution_path, std::vector<grid::SquareMeta*> *squares_by_backlog_length, short **link_table, const short metadata_col){
     // Start by try adding the nodes ordered by most links
-    for(short i{0}; i<squares_by_backlog_length->size(); ++i){
+    for(short i{0}; i<static_cast<short>(squares_by_backlog_length->size()); ++i){
       VerifyNewSolutionPathEntry(solution_path, (*squares_by_backlog_length)[link_table[i][metadata_col]], squares_by_backlog_length->size());
       // Try adding all the nodes linked to the node selected
-      for(short j{0}; j<squares_by_backlog_length->size(); ++j){
+      for(short j{0}; j<static_cast<short>(squares_by_backlog_length->size()); ++j){
         if(link_table[i][j]){
           VerifyNewSolutionPathEntry(solution_path, (*squares_by_backlog_length)[j], squares_by_backlog_length->size());
         }
