@@ -56,7 +56,7 @@ namespace grid{
     // Get screen size
     int screen_width, screen_height;
     getmaxyx(stdscr,screen_height,screen_width);
-    if(screen_width < 15){
+    if(screen_width < 15 && screen_height){
       printw("Your window is too small, please make the window bigger and try again");
       getch();
       return;
