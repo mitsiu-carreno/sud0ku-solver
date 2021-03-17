@@ -139,8 +139,8 @@ namespace hint{
     for(short temp_hints_index = temp_hints.size()-1; temp_hints_index >= 0; --temp_hints_index){
       // Search in grid based on temp_hints coords if value found, ignore 
       if(!grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x].value){
-        // Here's the tricky part, grid is an array of SquareMeta's (no pointers) but each SquareMeta has a void pointer in this case we are pointing to shots
-        grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x] = grid::SquareMeta {true, reinterpret_cast<void*>(new (std::nothrow) short{temp_hints[temp_hints_index].value})};
+        // Here's the tricky part, grid is an array of CellMeta's (no pointers) but each CellMeta has a void pointer in this case we are pointing to shots
+        grid[temp_hints[temp_hints_index].y][temp_hints[temp_hints_index].x] = grid::CellMeta {true, reinterpret_cast<void*>(new (std::nothrow) short{temp_hints[temp_hints_index].value})};
         
         // Now lets check that everything is stored correctly
         // grid[y][x] must exists, and value prop should point somewhere
@@ -211,7 +211,7 @@ namespace hint{
       }
       refresh();
     }
-    // At this point user ended adding hints, now we want to turn our temp_hints into real hints and link each new hint with SquareMeta
+    // At this point user ended adding hints, now we want to turn our temp_hints into real hints and link each new hint with CellMeta
     if(!CreateHintsArray(meta.grid, temp_hints, unique_hints)){
       return false;;
     }

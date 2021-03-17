@@ -3,7 +3,7 @@
 #include "constants.hpp"
 #include "grid.hpp"
 #include "utils.hpp"
-#include "square.hpp"
+#include "cell.hpp"
 #include <math.h>   // pow
 #include <vector>
 #include <algorithm>  // std::find
@@ -109,7 +109,7 @@ namespace game_logic{
   }
 
   // Get all the possible values for a given coord
-  short* GetAvailableValues(const short g_row, const short g_col, grid::SquareMeta (*grid)[constants::kGridSize], short &tmp_backlog_length){
+  short* GetAvailableValues(const short g_row, const short g_col, grid::CellMeta (*grid)[constants::kGridSize], short &tmp_backlog_length){
     std::vector<short> taken_values;
     // Get hints from row and coll 
     for(short i{0}; i < constants::kGridSize; ++i){
@@ -157,7 +157,7 @@ namespace game_logic{
   }
 
   // Based on the given hints, store all possible values for each coord
-  bool FillSquares(game_metadata::Meta &meta, std::vector<grid::SquareMeta*> *ptr[constants::kGridSize + 1]){
+  bool FillCells(game_metadata::Meta &meta, std::vector<grid::CellMeta*> *ptr[constants::kGridSize + 1]){
 
     for(short g_row {0}; g_row < constants::kGridSize; ++g_row){
       for(short g_col {0}; g_col < constants::kGridSize; ++g_col){
@@ -165,18 +165,18 @@ namespace game_logic{
           short backlog_length {0};
           short *backlog_ptr = GetAvailableValues(g_row, g_col, meta.grid, backlog_length);
           if(backlog_ptr){
-            // We create a new square object inside our grid and it's value will point to a new square::Square just created
-            meta.grid[g_row][g_col] = {grid::SquareMeta{false, reinterpret_cast<void*>(new (std::nothrow) square::Square {0, backlog_length, backlog_ptr})}};
+            // We create a new cell object inside our grid and it's value will point to a new cell::Cell just created
+            meta.grid[g_row][g_col] = {grid::CellMeta{false, reinterpret_cast<void*>(new (std::nothrow) cell::Cell {0, backlog_length, backlog_ptr})}};
             
             // Check that everything is stored correctly
             if(!meta.grid[g_row][g_col].value){
-              printw("An error ocurred while pointing our new square at position [%d, %d], we will punish the programmer with punishment #2252", g_row, g_col);
+              printw("An error ocurred while pointing our new cell at position [%d, %d], we will punish the programmer with punishment #2252", g_row, g_col);
               getch();
               return false;
             }
 
-            if(!reinterpret_cast<square::Square*>(meta.grid[g_row][g_col].value)->backlog_values){
-              printw("An error ocurred while storing the posible values at square [%d, %d], we will punish the programmer with punishment #5528", g_row, g_col);
+            if(!reinterpret_cast<cell::Cell*>(meta.grid[g_row][g_col].value)->backlog_values){
+              printw("An error ocurred while storing the posible values at cell [%d, %d], we will punish the programmer with punishment #5528", g_row, g_col);
               getch();
               return false;
             }
@@ -251,7 +251,7 @@ namespace game_logic{
     }
   }
 
-  void VerifyNewSolutionPathEntry(grid::SquareMeta **solution_path, grid::SquareMeta *new_entry, const short number_nodes_by_backlog_length){
+  void VerifyNewSolutionPathEntry(grid::CellMeta **solution_path, grid::CellMeta *new_entry, const short number_nodes_by_backlog_length){
     static short solution_path_index{0};
     // We will check the last n positions (where n is the number of nodes with a certain backlog_length)
     short last_relevant_index {static_cast<short>(solution_path_index - number_nodes_by_backlog_length)};
@@ -273,23 +273,23 @@ namespace game_logic{
   }
 
   // Based on the link table we start pushing the order of the nodes in our solution path
-  void DefineSolutionPath(grid::SquareMeta **solution_path, std::vector<grid::SquareMeta*> *squares_by_backlog_length, short **link_table, const short metadata_col){
+  void DefineSolutionPath(grid::CellMeta **solution_path, std::vector<grid::CellMeta*> *cells_by_backlog_length, short **link_table, const short metadata_col){
     // Start by try adding the nodes ordered by most links
-    for(short i{0}; i<static_cast<short>(squares_by_backlog_length->size()); ++i){
-      VerifyNewSolutionPathEntry(solution_path, (*squares_by_backlog_length)[link_table[i][metadata_col]], squares_by_backlog_length->size());
+    for(short i{0}; i<static_cast<short>(cells_by_backlog_length->size()); ++i){
+      VerifyNewSolutionPathEntry(solution_path, (*cells_by_backlog_length)[link_table[i][metadata_col]], cells_by_backlog_length->size());
       // Try adding all the nodes linked to the node selected
-      for(short j{0}; j<static_cast<short>(squares_by_backlog_length->size()); ++j){
+      for(short j{0}; j<static_cast<short>(cells_by_backlog_length->size()); ++j){
         if(link_table[i][j]){
-          VerifyNewSolutionPathEntry(solution_path, (*squares_by_backlog_length)[j], squares_by_backlog_length->size());
+          VerifyNewSolutionPathEntry(solution_path, (*cells_by_backlog_length)[j], cells_by_backlog_length->size());
         }
       }
     }
   }
 
   // Define the order to test the possible values (stored in backlog_values) will follow the Breadth First Search algorithm
-  bool GenerateSolutionPath(game_metadata::Meta &meta, std::vector<grid::SquareMeta*> *squares_by_backlog_length[constants::kGridSize + 1]){
-    short num_squares = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
-    meta.solution_path = new (std::nothrow) grid::SquareMeta*[num_squares];
+  bool GenerateSolutionPath(game_metadata::Meta &meta, std::vector<grid::CellMeta*> *cells_by_backlog_length[constants::kGridSize + 1]){
+    short num_cells = (constants::kGridSize * constants::kGridSize) - meta.hints_length;
+    meta.solution_path = new (std::nothrow) grid::CellMeta*[num_cells];
     if(!meta.solution_path){
       printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
       getch();
@@ -299,24 +299,24 @@ namespace game_logic{
     for(short i{0}; i<=constants::kGridSize; ++i){
       
       // We create a matrix that will store if two nodes are connected (same row/col/box) or not
-      short squares_in_graph = squares_by_backlog_length[i]->size();
+      short cells_in_graph = cells_by_backlog_length[i]->size();
       // Metadata columns
-      short col_node_number = squares_in_graph;
-      short col_total_links = squares_in_graph +1;
-      if(squares_in_graph == 0){
+      short col_node_number = cells_in_graph;
+      short col_total_links = cells_in_graph +1;
+      if(cells_in_graph == 0){
         continue;  
       }
 
-      short **link_table = new (std::nothrow) short*[squares_in_graph];
+      short **link_table = new (std::nothrow) short*[cells_in_graph];
       if(!link_table){
         printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
         getch();
         return false;
       }
 
-      for(short m{0}; m<squares_in_graph; ++m){
-        // We will add two extra columns to store the node position (in squares_by_backlog_length) and the number of links each node has
-        link_table[m] = new (std::nothrow) short[squares_in_graph + 2];
+      for(short m{0}; m<cells_in_graph; ++m){
+        // We will add two extra columns to store the node position (in cells_by_backlog_length) and the number of links each node has
+        link_table[m] = new (std::nothrow) short[cells_in_graph + 2];
         if(!link_table[m]){
           --m;
           for(; m>=0;--m){
@@ -330,19 +330,19 @@ namespace game_logic{
         } 
       }
 
-      for(short i_node{0}; i_node < squares_in_graph - 1; ++i_node){
+      for(short i_node{0}; i_node < cells_in_graph - 1; ++i_node){
         short i_next_node {static_cast<short>(i_node+1)};
-        grid::SquareMeta *current_node = (*squares_by_backlog_length[i])[i_node];
+        grid::CellMeta *current_node = (*cells_by_backlog_length[i])[i_node];
 
         short current_node_distance = std::distance(std::begin(*meta.grid), current_node);
 
-        // The "squares_in_graph" column of all rows will be the number of the row (which is a position in our squares_by_backlog_length[i])
-        link_table[i_node][squares_in_graph] = i_node;
-        link_table[i_next_node][squares_in_graph] = i_next_node;
+        // The "cells_in_graph" column of all rows will be the number of the row (which is a position in our cells_by_backlog_length[i])
+        link_table[i_node][cells_in_graph] = i_node;
+        link_table[i_next_node][cells_in_graph] = i_next_node;
         link_table[i_node][i_node] = 0;
 
-        for(;i_next_node < squares_in_graph; ++i_next_node){
-          grid::SquareMeta *next_node = (*squares_by_backlog_length[i])[i_next_node];
+        for(;i_next_node < cells_in_graph; ++i_next_node){
+          grid::CellMeta *next_node = (*cells_by_backlog_length[i])[i_next_node];
           short next_node_distance = std::distance(std::begin(*meta.grid), next_node);
 
           PopulateLinkTable(link_table, i_node, current_node_distance, i_next_node, next_node_distance);
@@ -351,15 +351,15 @@ namespace game_logic{
 
       // We use the second of our two extra columns to store the total amount of 
       // links that the node has to it's peers
-      AddTotalLinksToLinkTable(link_table, squares_in_graph, col_total_links);
+      AddTotalLinksToLinkTable(link_table, cells_in_graph, col_total_links);
 
       // Order link_table from most links to less
-      OrderLinkTableByTotalLinks(link_table, squares_in_graph, col_total_links); 
+      OrderLinkTableByTotalLinks(link_table, cells_in_graph, col_total_links); 
 
       // Start tracing the route to try values
-      DefineSolutionPath(meta.solution_path, squares_by_backlog_length[i], link_table, col_node_number); 
+      DefineSolutionPath(meta.solution_path, cells_by_backlog_length[i], link_table, col_node_number); 
 
-      for(short m{0}; m<squares_in_graph; ++m){
+      for(short m{0}; m<cells_in_graph; ++m){
         delete[] link_table[m];
       }
       delete[] link_table;
@@ -369,12 +369,12 @@ namespace game_logic{
     return true;
   }
 
-  void CleanSquaresByBacklogLength(std::vector<grid::SquareMeta*>*squares_by_backlog_length[constants::kGridSize + 1]){
+  void CleanCellsByBacklogLength(std::vector<grid::CellMeta*>*cells_by_backlog_length[constants::kGridSize + 1]){
     // Clean memory
     for(short i{0}; i<=constants::kGridSize; ++i){
-      delete squares_by_backlog_length[i];    // Attention we dont use delete[] because the vector content is usefull
+      delete cells_by_backlog_length[i];    // Attention we dont use delete[] because the vector content is usefull
     }
-    delete[] squares_by_backlog_length;
+    delete[] cells_by_backlog_length;
   }
 
   // Solve the sud0ku
@@ -384,9 +384,9 @@ namespace game_logic{
 
     while(solution_path_index < solution_path_length ){
     
-      short current_value = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value;
-      short *begin = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_values;
-      short backlog_length = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_length;
+      short current_value = reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->current_value;
+      short *begin = reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->backlog_values;
+      short backlog_length = reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->backlog_length;
       short current_value_index = FindIndexInSet(begin, begin + backlog_length, current_value);
       short  next_value_index = current_value_index +1;
 
@@ -394,9 +394,9 @@ namespace game_logic{
         short node_distance = std::distance(std::begin(*meta.grid), meta.solution_path[solution_path_index]);
         short node_row = node_distance / constants::kGridSize;
         short node_col = node_distance % constants::kGridSize;
-        if(ValidNumber(meta.grid, node_row, node_col, reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_values[next_value_index])){
+        if(ValidNumber(meta.grid, node_row, node_col, reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->backlog_values[next_value_index])){
               
-          reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value = reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->backlog_values[next_value_index];
+          reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->current_value = reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->backlog_values[next_value_index];
           ++solution_path_index;
           break;
         }
@@ -405,7 +405,7 @@ namespace game_logic{
 
       // If we tried all our possible values, step back
       if(next_value_index == backlog_length){
-        reinterpret_cast<square::Square*>(meta.solution_path[solution_path_index]->value)->current_value = 0;
+        reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->current_value = 0;
         --solution_path_index;
       }
         
@@ -418,42 +418,42 @@ namespace game_logic{
   // Function to handle the whole solving algorith
   void SolveSud0ku(game_metadata::Meta &meta){
 
-    // We will store square addresses based on the backlog_length (number of possible values)
+    // We will store cell addresses based on the backlog_length (number of possible values)
     // backlog_length | Addr1 | Addr2 |...
     //       0        |  <NA> |  <NA> |
     //       1        | 0x12  |       |
     //       2        | 0x13  | 0x1F  |
     //                  ...
     //       9        | 0x44  |
-    std::vector<grid::SquareMeta*> **squares_by_backlog_length = new (std::nothrow) std::vector<grid::SquareMeta*>*[constants::kGridSize + 1];
-    if(!squares_by_backlog_length){
+    std::vector<grid::CellMeta*> **cells_by_backlog_length = new (std::nothrow) std::vector<grid::CellMeta*>*[constants::kGridSize + 1];
+    if(!cells_by_backlog_length){
       printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
       getch();
       return;
     }
 
     for(short i{0}; i<=constants::kGridSize; ++i){
-      squares_by_backlog_length[i] = new (std::nothrow) std::vector<grid::SquareMeta*>;
-      if(!squares_by_backlog_length[i]){
+      cells_by_backlog_length[i] = new (std::nothrow) std::vector<grid::CellMeta*>;
+      if(!cells_by_backlog_length[i]){
         --i;
         for(; i<=0; --i){
-          delete squares_by_backlog_length[i];  // Attention we dont use delete[] because the vector content is usefull
+          delete cells_by_backlog_length[i];  // Attention we dont use delete[] because the vector content is usefull
         }
-        delete[] squares_by_backlog_length;
+        delete[] cells_by_backlog_length;
 
         printw("Woops, looks like we are running low on memory, tell you what, let's try closing some programs/services you are not using and run again ;)");
         getch();
         return;
       }
     }
-    // Create squares in empty spaces
-    if(!game_logic::FillSquares(meta, squares_by_backlog_length)){
-      game_logic::CleanSquaresByBacklogLength(squares_by_backlog_length);
+    // Create cells in empty spaces
+    if(!game_logic::FillCells(meta, cells_by_backlog_length)){
+      game_logic::CleanCellsByBacklogLength(cells_by_backlog_length);
       return;
     }
     // Define the order in which values will be tested
-    if(!game_logic::GenerateSolutionPath(meta, squares_by_backlog_length)){
-      game_logic::CleanSquaresByBacklogLength(squares_by_backlog_length);
+    if(!game_logic::GenerateSolutionPath(meta, cells_by_backlog_length)){
+      game_logic::CleanCellsByBacklogLength(cells_by_backlog_length);
       return;
     }
    
@@ -464,8 +464,8 @@ namespace game_logic{
     grid::PrintGrid(meta.grid, false);
     getch();
 
-    game_logic::CleanSquaresByBacklogLength(squares_by_backlog_length);
-    squares_by_backlog_length = nullptr;
+    game_logic::CleanCellsByBacklogLength(cells_by_backlog_length);
+    cells_by_backlog_length = nullptr;
     
   }
 }

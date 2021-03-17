@@ -11,12 +11,12 @@ namespace game_metadata{
 
 namespace grid{
   // Important to initialize value as nullptr, avoid reading garbage memory
-  struct SquareMeta{
+  struct CellMeta{
     bool short_type;
     void *value = nullptr;
   };
 
-  using grid_t = grid::SquareMeta[constants::kGridSize][constants::kGridSize];
+  using grid_t = grid::CellMeta[constants::kGridSize][constants::kGridSize];
 
   bool InitGrid(game_metadata::Meta&);
   void PrintGrid(const grid_t, bool);  

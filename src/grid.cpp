@@ -1,7 +1,7 @@
 #include "constants.hpp"
 #include "grid.hpp"
 #include "hint.hpp"
-#include "square.hpp"
+#include "cell.hpp"
 #include "game_metadata.hpp"
 #include <algorithm>  // std::fill
 #include <ncurses.h>
@@ -46,12 +46,12 @@ namespace grid{
       if(grid[row][col].short_type){
         return *static_cast<short*>(grid[row][col].value);
       }else{
-        return static_cast<square::Square*>(grid[row][col].value)->current_value;
+        return static_cast<cell::Cell*>(grid[row][col].value)->current_value;
       }
     }
   }
 
-  // Display grid in screen, add dividers for boxes and can display guides for square localization
+  // Display grid in screen, add dividers for boxes and can display guides for cell localization
   void PrintGrid(const grid::grid_t grid, bool show_guides=false){
     // Get screen size
     int screen_width, screen_height;

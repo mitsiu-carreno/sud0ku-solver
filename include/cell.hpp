@@ -1,10 +1,10 @@
-#ifndef SQUARE_H
-#define SQUARE_H
+#ifndef CELLL_H
+#define CELLL_H
 
 #include "grid.hpp"
 
-namespace square{
-  struct Square{
+namespace cell{
+  struct Cell{
     short current_value;
     short backlog_length;
     short *backlog_values;

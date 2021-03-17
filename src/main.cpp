@@ -1,7 +1,7 @@
 #include "grid.hpp"
 #include "game_logic.hpp"
 #include "game_metadata.hpp"
-#include "square.hpp"
+#include "cell.hpp"
 #include <ncurses.h>
 
 int main(){
@@ -15,7 +15,7 @@ int main(){
     return 1;
   }
   
-  // Create and store squares and find solution
+  // Create and store cells and find solution
   game_logic::SolveSud0ku(meta);
 
   // Proper handle of our memory
@@ -24,8 +24,8 @@ int main(){
       if(meta.grid[i][j].short_type){
         delete reinterpret_cast<short*>(meta.grid[i][j].value);
       }else{
-        delete[] reinterpret_cast<square::Square*>(meta.grid[i][j].value)->backlog_values; 
-        delete reinterpret_cast<square::Square*>(meta.grid[i][j].value);
+        delete[] reinterpret_cast<cell::Cell*>(meta.grid[i][j].value)->backlog_values; 
+        delete reinterpret_cast<cell::Cell*>(meta.grid[i][j].value);
       }
       //delete meta.grid[i][j];
     }

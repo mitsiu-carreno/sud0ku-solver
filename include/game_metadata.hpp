@@ -6,14 +6,14 @@
 
 // Have to forward declare to compile line 15 (on include grid.hpp is called game_metadata.hpp)
 namespace grid{
-  struct SquareMeta;
+  struct CellMeta;
 }
 
 namespace game_metadata{
   struct Meta{
-    grid::SquareMeta (*grid)[constants::kGridSize] = nullptr;
+    grid::CellMeta (*grid)[constants::kGridSize] = nullptr;
     short hints_length;
-    grid::SquareMeta **solution_path = nullptr;
+    grid::CellMeta **solution_path = nullptr;
   };
 }
 
