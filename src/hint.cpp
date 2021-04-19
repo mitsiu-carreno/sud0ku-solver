@@ -74,7 +74,7 @@ namespace hint{
   
   // We check that the new hint, doesn't repeat value on the same row, col and box
   bool ValidateNewHint(const std::vector<NewHint> &temp_hints, NewHint *new_hint){
-    
+
     bool result = true;
     short box_neighbors_length = 0;
     // Get the coords of the box neighbors of the given hint
@@ -205,7 +205,8 @@ namespace hint{
           delete new_hint;
           new_hint = nullptr;
         }else{
-          return false;
+          //return false;
+          continue;
         }
 
       }
