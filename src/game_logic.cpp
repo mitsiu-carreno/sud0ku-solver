@@ -397,6 +397,12 @@ namespace game_logic{
         if(ValidNumber(meta.grid, node_row, node_col, reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->backlog_values[next_value_index])){
               
           reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->current_value = reinterpret_cast<cell::Cell*>(meta.solution_path[solution_path_index]->value)->backlog_values[next_value_index];
+
+          clear();
+          grid::PrintGrid(meta.grid, false);
+          refresh();
+          napms(1);
+          
           ++solution_path_index;
           break;
         }

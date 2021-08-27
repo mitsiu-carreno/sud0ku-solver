@@ -104,7 +104,7 @@ namespace grid{
       }
       printw("\n");  
       if(PrintDivisionHere(g_row)){
-        char divider[constants::kGridSize + constants::kGridSection];
+        char divider[constants::kGridSize + constants::kGridSection +1];
         std::fill(divider, divider + constants::kGridSize + constants::kGridSection -1, '-');
         if(show_guides){
           printw("    ");
