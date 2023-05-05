@@ -7,7 +7,7 @@ sudo apt install valgrind
 valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./bin/sud0ku        
       
       
-Example
+Example    
 a15     
 b12    
 c11    
