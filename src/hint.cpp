@@ -165,7 +165,7 @@ namespace hint{
     while(true){
       clear();  // clear screen
       const short kMaxInput = 4;
-      char input[kMaxInput];  // should we clean this var? naaa when overwritten, a new null terminator will be added
+      char input[kMaxInput+1];  // should we clean this var? naaa when overwritten, a new null terminator will be added but we need an extra space for the termination caracter
 
       // We create a new temp_grid each iteration (I know this might be performantly questionable) 
       // but we want to only dispaly based on the current version of temp_hints
